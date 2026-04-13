@@ -1,0 +1,31 @@
+{
+  "Buttons": {
+    "login": "Login",
+    "logout": "Logout",
+    "visitStore": "Go to Store"
+  },
+  "NavItems": {
+    "about_us": "About Us",
+    "founder_profile": "Founder Profile",
+    "mission_vision": "Vision & Mission",
+    "core_values": "Our Core Values",
+    "our_services": "Our Services",
+    "join_our_family": "Join Our Family",
+    "contact_us": "Contact Us"
+  },
+  "StoreBanner": {
+    "eyebrow": "Store Banner",
+    "title": "Visit our website to see our certified products",
+    "description": "Click here to go directly to store.shadi.ps"
+  },
+  "PaymentStatus": {
+    "successTitle": "Payment Successful!",
+    "successMessage": "Thank you! Your payment has been received successfully. We will contact you soon.",
+    "failedTitle": "Payment Failed",
+    "failedMessage": "Sorry, your payment could not be processed. Please try again or contact us.",
+    "transactionDetails": "Transaction Details",
+    "errorMessage": "An error occurred while fetching transaction details. Please try again.",
+    "contactUs": "Contact Us",
+    "scanQrCode": "Scan QR code to contact us on WhatsApp"
+  }
+}

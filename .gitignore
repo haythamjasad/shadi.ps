@@ -1,0 +1,45 @@
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript build state
+*.tsbuildinfo
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+
+# Local archives, backups, and dumps at repo root
+/assets.zip
+/backend.zip
+/frontend.zip
+/backups/
+/db-backups/
+/cpanel-hotfix/
+/transactions.sql
+/Pasted image.png
+/Sample 01.pdf
+/Sample 02.pdf
+/Sample 03.pdf
+/Sample 04.pdf
+/Sample 05.pdf
+/Sample 6.pdf
+/Sample 1.jpg
+/Sample2.jpg
+/Sample 3.jpg
+/Sample 4.jpg
+/Sample 5.jpg
+/Sample 6.jpg

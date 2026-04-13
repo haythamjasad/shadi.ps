@@ -1,0 +1,165 @@
+{
+  "Buttons": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "book_consultation": "حجز استشارة",
+    "pay": "ادفع",
+    "forgetPassword": "نسيت كلمة المرور؟",
+    "sendCode": "إرسال الرمز",
+    "resetPassword": "إعادة تعيين كلمة المرور",
+    "resetFilters": "مسح الفلاتر",
+    "search": "بحث",
+    "refresh": "تحديث",
+    "editTransaction": "تعديل الحركة",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "addPayment": "دفع المستحقات",
+    "visitStore": "الذهاب الى المتجر",
+    "join": "انضم",
+    "home": "الصفحة الرئيسية"
+  },
+  "NavItems": {
+    "about_us": "الشركة",
+    "founder_profile": "المؤسس",
+    "mission_vision": "رسالتنا ورؤيتنا",
+    "core_values": "قِيَمُنا",
+    "our_services": "الخدمات",
+    "join_our_family": "انضم إلى عائلتنا",
+    "contact_us": "تواصل معنا"
+  },
+  "Content": {
+    "for_engineering_consulting": "للهندسة والاستشارات",
+    "shadi_shirri": "شادي شري"
+  },
+  "StoreBanner": {
+    "eyebrow": "زر المتجر",
+    "title": "زوروا موقعنا لمشاهدة منتجاتنا المعتمدة",
+    "description": "اضغط هنا للانتقال مباشرة إلى store.shadi.ps"
+  },
+  "Textfields": {
+    "name": "الاسم",
+    "phone": "رقم الهاتف",
+    "notes": "تفاصيل إضافية حول طبيعة الاستشارة وسبب الزيارة",
+    "cost": "التكلفة",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "adminNotes": "ملاحظات الإدارة",
+    "skills": "نظرة عامة عن خبراتك ومسيرتك المهنية",
+    "graduatedAt": "سنة التخرج"
+  },
+  "Checkboxes": {
+    "serviceType": "نوع الخدمة",
+    "engineeringType": "الخدمات التي تقدمها"
+  },
+  "RadioButtons": {
+    "location": "الموقع"
+  },
+  "CheckboxError": {
+    "Select at least one service": "الرجاء اختيار خدمة واحدة على الأقل."
+  },
+  "RadioError": {
+    "Location is required": "الرجاء اختيار الموقع."
+  },
+  "TextfieldErrors": {
+    "Please enter your name": "الرجاء إدخال اسمك.",
+    "Please enter your phone number": "الرجاء إدخال رقم هاتفك.",
+    "Phone number must start with a country code": "يجب أن يبدأ رقم الهاتف بمقدمة الدولة.",
+    "Please enter the cost": "الرجاء إدخال التكلفة.",
+    "Cost must be more than 0": "يجب أن تكون القيمة أكبر من 0.",
+    "Please enter a valid email": "الرجاء إدخال بريد إلكتروني صالح.",
+    "Please enter your password": "الرجاء إدخال كلمة المرور.",
+    "Please enter your email": "الرجاء إدخال بريدك الإلكتروني.",
+    "Passwords must match": "يجب أن تتطابق كلمتا المرور.",
+    "Please confirm your password": "الرجاء تأكيد كلمة المرور.",
+    "Date of graduation cannot be in the future": "لا يمكن أن يكون تاريخ التخرج في المستقبل.",
+    "Please enter your year of graduation": "الرجاء إدخال سنة التخرج.",
+    "Please enter a valid year": "الرجاء إدخال سنة صحيحة.",
+    "Year must be a whole number": "يجب أن تكون السنة رقمًا صحيحًا.",
+    "Year of graduation cannot be in the future": "لا يمكن أن تكون سنة التخرج في المستقبل.",
+    "Please enter your skills": "الرجاء إدخال مهاراتك.",
+    "Skills must be at least 50 characters": "يجب أن تكون المهارات 50 حرفًا على الأقل."
+  },
+  "SnackbarMessages": {
+    "Transaction added successfully": "تمت إضافة الحركة بنجاح. سيتم التواصل معك بعد اتمام عملية الدفع",
+    "Transaction updated successfully": "تم تحديث الحركة بنجاح!",
+    "Something went wrong!": "حدث خطأ ما!",
+    "Charge Transaction added successfully": "تم تسديد دفعة بنجاح. سيتم التواصل معك بعد اتمام عملية الدفع",
+    "Login successful": "تم تسجيل الدخول بنجاح!",
+    "Join request added successfully": "تمت إضافة طلب الانضمام بنجاح!",
+    "Join request deleted successfully": "تم حذف طلب الانضمام بنجاح!",
+    "Payment failed to add": "فشل في إضافة الدفع!",
+    "Reset Password Link Sent Successfully to your Email, Check it": "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني، تحقق منه",
+    "Password reset successfully": "تمت إعادة تعيين كلمة المرور بنجاح"
+  },
+  "SideDrawerLinks": {
+    "transactions": "الحركات",
+    "join_requests": "طلبات الانضمام"
+  },
+  "Tables": {
+    "Headers": {
+      "id": "الرقم التسلسلي",
+      "name": "الاسم",
+      "phone": "رقم الهاتف",
+      "serviceType": "نوع الخدمة",
+      "cost": "التكلفة",
+      "location": "الموقع",
+      "status": "الحالة",
+      "adminNotes": "ملاحظات الإدارة",
+      "notes": "ملاحظات",
+      "createdAt": "التاريخ",
+      "actions": "الإجراءات",
+      "graduatedAt": "سنة التخرج",
+      "skills": "الخبرات والمسيرة المهنية"
+    },
+    "noResults": "لا يوجد"
+  },
+  "Status": {
+    "PENDING": "قيد الانتظار",
+    "FINISHED": "مكتمل",
+    "CANCELLED": "ملغي",
+    "PAUSED": "مؤجل",
+    "NEW": "عالق"
+  },
+  "ServiceType": {
+    "MECHANIC": "ميكانيك",
+    "ELECTRIC": "كهرباء",
+    "CIVIL": "مدني",
+    "ARCHITECTURAL": "معماري",
+    "CHARGES": "دفع مستحقات"
+  },
+  "Location": {
+    "RAMMALLAH": "رام الله",
+    "JENIN": "جنين",
+    "NABLUS": "نابلس",
+    "SALFIT": "سلفيت",
+    "BETHLEHEM": "بيت لحم",
+    "HEBRON": "الخليل",
+    "TULKAREM": "طولكرم",
+    "ZOOM": "لقاء اونلاين",
+    "null": "غير محدد"
+  },
+  "Titles": {
+    "transaction_status": "حالة الحركة"
+  },
+  "PaymentStatus": {
+    "successTitle": "تم الدفع بنجاح!",
+    "successMessage": "شكراً لك! تم استلام دفعتك بنجاح. سنتواصل معك قريباً.",
+    "failedTitle": "فشل الدفع",
+    "failedMessage": "عذراً، لم يتم إتمام عملية الدفع. يرجى المحاولة مرة أخرى أو التواصل معنا.",
+    "transactionDetails": "تفاصيل المعاملة",
+    "errorMessage": "حدث خطأ أثناء جلب تفاصيل المعاملة. يرجى المحاولة مرة أخرى.",
+    "contactUs": "تواصل معنا",
+    "scanQrCode": "امسح أو انقر على رمز QR للتواصل معنا"
+  },
+  "Roles": {
+    "ROLE_ADMIN": "مدير",
+    "ROLE_USER": "مستخدم"
+  },
+  "AutoComplete": {
+    "graduatedAt": "سنة التخرج"
+  },
+  "AutoCompleteErrors": {
+    "graduatedAt": "الرجاء اختيار سنة التخرج."
+  }
+}

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تأكيد المعاملة</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #364049;
+        background: linear-gradient(135deg, #f6f6f8 0%, #e4e4e9 100%);
+        padding: 12px;
+      }
+      .container {
+        max-width: 700px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 6px 24px rgba(58, 55, 65, 0.12);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #3a3741 0%, #2d2a34 100%);
+        color: white;
+        text-align: center;
+        padding: 24px 16px;
+        border-bottom: 3px solid #f99d1c;
+      }
+      .header h1 {
+        font-size: 26px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #f99d1c;
+      }
+      .transaction-id {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 18px;
+        font-weight: 600;
+        font-size: 12px;
+        background-color: rgba(249, 157, 28, 0.2);
+        border: 1px solid #f99d1c;
+        color: #f99d1c;
+      }
+      .content {
+        padding: 20px;
+        text-align: right;
+      }
+      .section {
+        margin-bottom: 16px;
+      }
+      .section-title {
+        color: #3a3741;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f99d1c;
+        display: block;
+        text-align: right;
+      }
+      .icon {
+        width: 24px;
+        height: 24px;
+      }
+      .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .details-grid.full-width {
+        grid-template-columns: 1fr;
+      }
+      .detail-item {
+        background: linear-gradient(135deg, #f6f6f8 0%, #e4e4e9 100%);
+        padding: 12px;
+        border-radius: 8px;
+        border-right: 3px solid #f99d1c;
+      }
+      .detail-label {
+        color: #5b6b7c;
+        font-size: 10px;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        text-align: right;
+      }
+      .detail-value {
+        color: #1a1a1a;
+        font-size: 14px;
+        font-weight: 500;
+        word-break: break-word;
+        text-align: right;
+      }
+      .cost-section {
+        background: linear-gradient(135deg, #3a3741 0%, #2d2a34 100%);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 4px 12px rgba(58, 55, 65, 0.25);
+      }
+      .cost-label {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+      .cost-amount {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 8px 0;
+        color: #f99d1c;
+      }
+      .currency {
+        font-size: 20px;
+        margin-right: 4px;
+      }
+      .divider {
+        height: 1px;
+        background: linear-gradient(to right, transparent, #ddd, transparent);
+        margin: 16px 0;
+      }
+      .payment-section {
+        background: linear-gradient(135deg, #f6f6f8 0%, #e4e4e9 100%);
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #f99d1c;
+        text-align: right;
+      }
+      .payment-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(58, 55, 65, 0.1);
+        width: 100%;
+      }
+      .payment-row:last-child {
+        border-bottom: none;
+      }
+      .payment-label {
+        color: #5b6b7c;
+        font-weight: 600;
+        font-size: 13px;
+        text-align: right;
+      }
+      .payment-value {
+        color: #1a1a1a;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: right;
+      }
+      .notes-box {
+        background: linear-gradient(135deg, #fff9e6 0%, #ffe8b6 100%);
+        border-right: 5px solid #f99d1c;
+        padding: 15px;
+        border-radius: 8px;
+        color: #856404;
+        font-size: 14px;
+        line-height: 1.6;
+        text-align: right;
+      }
+      .footer {
+        background: #f6f6f8;
+        padding: 25px;
+        text-align: center;
+        color: #5b6b7c;
+        font-size: 12px;
+        border-top: 1px solid #e0e0e0;
+      }
+      .footer p {
+        margin-bottom: 8px;
+      }
+      .footer-link {
+        color: #3a3741;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .footer-link:hover {
+        text-decoration: underline;
+        color: #f99d1c;
+      }
+      @media (max-width: 600px) {
+        .details-grid {
+          grid-template-columns: 1fr;
+        }
+        .header h1 {
+          font-size: 24px;
+        }
+        .cost-amount {
+          font-size: 36px;
+        }
+        .content {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>شادي شري للهندسة والاستشارات</h1>
+        <div style="font-size: 18px; margin: 8px 0">اشعار دفع</div>
+        <div class="transaction-id">رقم الطلب: 123456</div>
+      </div>
+
+      <div class="content">
+        <!-- معلومات العميل -->
+        <div class="section">
+          <div class="section-title">معلومات الزبون 👤</div>
+          <div class="payment-section">
+            <table style="width: 100%; border-collapse: collapse">
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1)">
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  محمد أحمد
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  الاسم:
+                </td>
+              </tr>
+              <tr>
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  +970597261889
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  رقم الهاتف:
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- تفاصيل الطلب -->
+        <div class="section">
+          <div class="section-title">تفاصيل الطلب 📋</div>
+          <div class="payment-section">
+            <table style="width: 100%; border-collapse: collapse">
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1)">
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  الهندسة المدنية، خدمات ميكانيكية
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  نوع الخدمة:
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1)">
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  رام الله
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  الموقع:
+                </td>
+              </tr>
+              <tr>
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  10/01/2026
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  تاريخ الطلب:
+                </td>
+              </tr>
+              <tr>
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  يرجى التأكد من إحضار جميع الوثائق والرسومات المطلوبة للاجتماع
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  معلومات إضافية:
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- تفاصيل الدفع -->
+        <div class="section">
+          <div class="section-title">تفاصيل الدفع 💳</div>
+          <div class="payment-section">
+            <table style="width: 100%; border-collapse: collapse">
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1)">
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  TXN-2026-001234
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  رقم الحركة:
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1)">
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  بطاقة فيزا
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  نوع البطاقة:
+                </td>
+              </tr>
+              <tr>
+                <td
+                  class="payment-value"
+                  style="padding: 8px 0; text-align: right"
+                >
+                  10/01/2026، 07:46
+                </td>
+                <td
+                  class="payment-label"
+                  style="padding: 8px 0; direction: rtl; text-align: right"
+                >
+                  تاريخ الحركة:
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- الملخص المالي -->
+        <div class="section">
+          <div class="cost-section">
+            <div class="cost-label">المبلغ الإجمالي للطلب</div>
+            <div class="cost-amount"><span class="currency">$</span>100</div>
+          </div>
+        </div>
+
+        <!-- التذييل -->
+        <div class="footer">
+          <p style="font-weight: 600; color: #1a1a1a; margin-bottom: 15px">
+            شكراً لك على اختيارك خدماتنا 🙏
+          </p>
+          <p>
+            إذا كان لديك أي استفسارات أو تحتاج إلى المساعدة، يرجى عدم التردد في
+            <a href="mailto:support@shadi.com" class="footer-link"
+              >التواصل معنا</a
+            >
+          </p>
+          <p style="margin-top: 15px; opacity: 0.8">
+            &copy; 2026 خدمات شادي. جميع الحقوق محفوظة.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
