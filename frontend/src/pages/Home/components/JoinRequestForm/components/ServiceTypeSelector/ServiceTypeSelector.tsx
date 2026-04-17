@@ -4,7 +4,7 @@ import { useField } from "formik";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { ServiceTypeItem } from "../../types";
-import { SERVICE_TYPES } from "./constants.tsx";
+import { SERVICE_TYPES } from "./constants";
 
 interface ServiceTypeSelectorProps {
   name: string;
@@ -28,7 +28,7 @@ const FormikServiceTypeSelector: FC<ServiceTypeSelectorProps> = ({ name }) => {
   return (
     <Box
       sx={{
-        border: "1px solid #b1aeb9ff",
+        border: "1px solid rgba(248, 159, 50, 0.35)",
         p: 1,
         borderRadius: 2,
         width: "100%",
@@ -49,17 +49,17 @@ const FormikServiceTypeSelector: FC<ServiceTypeSelectorProps> = ({ name }) => {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 0.75,
-                px: 1.2,
-                py: 0.9,
+                gap: 0.5,
+                px: 1,
+                py: 0.8,
                 borderRadius: 3,
                 fontSize: "clamp(9pt, 1vw, 12pt)",
-                border: "1px solid #b1aeb9ff",
-                borderColor: isSelected ? "primary.main" : "#b1aeb9ff",
+                border: "1px solid rgba(248, 159, 50, 0.35)",
+                borderColor: isSelected ? "rgba(248, 159, 50, 1)" : "rgba(248, 159, 50, 0.35)",
                 backgroundColor: isSelected
-                  ? "rgba(25, 118, 210, 0.08)"
-                  : "primary.light",
-                color: isSelected ? "primary.main" : "text.primary",
+                  ? "rgba(248, 159, 50, 0.12)"
+                  : "#ffffff",
+                color: isSelected ? "rgba(248, 159, 50, 1)" : "text.primary",
                 userSelect: "none",
                 transition: "all 0.2s ease",
                 cursor: "pointer",
@@ -69,8 +69,7 @@ const FormikServiceTypeSelector: FC<ServiceTypeSelectorProps> = ({ name }) => {
                 direction="row"
                 justifyContent="center"
                 alignItems="center"
-                minWidth={90}
-                spacing={0.75}
+                minWidth={80}
               >
                 {isSelected && (
                   <div
@@ -78,18 +77,6 @@ const FormikServiceTypeSelector: FC<ServiceTypeSelectorProps> = ({ name }) => {
                   >
                     <CheckIcon fontSize="small" />
                   </div>
-                )}
-                {item.icon && (
-                  <Box
-                    sx={{
-                      display: "grid",
-                      placeItems: "center",
-                      width: 28,
-                      height: 28,
-                    }}
-                  >
-                    {item.icon}
-                  </Box>
                 )}
                 {item.label}
               </Stack>

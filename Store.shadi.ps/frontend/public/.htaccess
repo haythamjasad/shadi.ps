@@ -1,0 +1,17 @@
+Options -MultiViews
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Never let the React SPA rewrite API requests.
+RewriteRule ^api/v01(?:/|$) - [END,NC]
+
+# Allow clean PDF links that proxy to uploaded product docs.
+RewriteRule ^assets/([^/]+\.pdf)$ /api/v01/uploads/docs/$1 [END,NC,QSA]
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [END]
+
+RewriteRule ^ index.html [END]
+</IfModule>

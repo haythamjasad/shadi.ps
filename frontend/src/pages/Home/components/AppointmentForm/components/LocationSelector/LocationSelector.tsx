@@ -1,11 +1,10 @@
-import { alpha, Box, Stack, Typography } from "@mui/material";
 import { FC } from "react";
 import { useField, useFormikContext } from "formik";
+import { Box, Stack, Typography } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { LocationItem } from "../../types";
-import { LOCATIONS } from "./constants.tsx";
+import { LOCATIONS } from "./constants";
 import { useTranslation } from "react-i18next";
-import { brand, logoColor } from "@/style/colors";
 
 interface Props {
   name: string; // formik field name
@@ -22,36 +21,22 @@ const LocationSelectorField: FC<Props> = ({ name }) => {
   const selectOne = (item: LocationItem) => {
     setFieldValue(name, item);
   };
-  const accentColor = logoColor;
-  const baseBg = "#ffffff";
 
   return (
     <Box
       sx={{
-        border: "1px solid",
-        borderColor: alpha(accentColor, 0.25),
-        p: { xs: 1, md: 1.5 },
-        borderRadius: 3,
-        background: "#ffffff",
-        boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
+        border: "1px solid rgba(248, 159, 50, 0.35)",
+        p: 1,
+        borderRadius: 2,
       }}
     >
-      <Typography
-        variant="subtitle1"
-        sx={{ mb: 1, color: brand[600], fontWeight: "bold" }}
-      >
+      <Typography variant="subtitle1" sx={{ mb: 1 }}>
         الموقع
       </Typography>
 
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-        gap: 1,
-      }}
-    >
-      {LOCATIONS.map((item) => (
-        <Box
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+        {LOCATIONS.map((item) => (
+          <Box
             key={item.label}
             onClick={() => selectOne(item)}
             sx={{
@@ -59,54 +44,28 @@ const LocationSelectorField: FC<Props> = ({ name }) => {
               opacity: item.enabled ? 1 : 0.5,
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              gap: 1,
-              px: 1.5,
-              py: 1,
+              gap: 0.5,
+              px: 1,
+              py: 0.8,
               borderRadius: 2,
               fontSize: "clamp(9pt, 1vw, 12pt)",
               border: "1px solid",
-              borderColor: isSelected(item) ? accentColor : alpha(brand[500], 0.25),
+              borderColor: isSelected(item) ? "rgba(248, 159, 50, 1)" : "rgba(248, 159, 50, 0.35)",
               backgroundColor: isSelected(item)
-                ? alpha(accentColor, 0.12)
-                : alpha(baseBg, 1),
-              color: brand[700],
+                ? "rgba(248, 159, 50, 0.12)"
+                : "#ffffff",
+              color: isSelected(item) ? "rgba(248, 159, 50, 1)" : "text.primary",
               userSelect: "none",
               transition: "all 0.2s ease",
               cursor: "pointer",
-              boxShadow: isSelected(item)
-                ? "0 10px 18px rgba(0,0,0,0.12)"
-                : "0 4px 10px rgba(0,0,0,0.06)",
-              "&:hover": {
-                borderColor: accentColor,
-                backgroundColor: alpha(accentColor, 0.14),
-                transform: "translateY(-1px)",
-              },
             }}
           >
             <Stack
               direction="row"
-              justifyContent="flex-start"
+              justifyContent="center"
               alignItems="center"
-              spacing={1}
-              minWidth={0}
+              minWidth={80}
             >
-              {item.icon && (
-                <Box
-                  sx={{
-                    display: "grid",
-                    placeItems: "center",
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    backgroundColor: alpha(accentColor, 0.16),
-                    color: isSelected(item) ? brand[700] : accentColor,
-                    border: `1px solid ${alpha(accentColor, 0.3)}`,
-                  }}
-                >
-                  {item.icon}
-                </Box>
-              )}
               {isSelected(item) && (
                 <div
                   style={{
@@ -119,12 +78,7 @@ const LocationSelectorField: FC<Props> = ({ name }) => {
                 </div>
               )}
 
-              <Typography
-                component="span"
-                sx={{ fontWeight: "bold", color: brand[700] }}
-              >
-                {item.label}
-              </Typography>
+              {item.label}
             </Stack>
           </Box>
         ))}
@@ -133,7 +87,7 @@ const LocationSelectorField: FC<Props> = ({ name }) => {
         <Typography
           variant="caption"
           sx={{
-            color: "#ffcdc9",
+            color: "error.main",
             mt: 1,
             display: "block",
             textAlign: "left",

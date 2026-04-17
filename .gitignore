@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # Dependencies
 node_modules/
@@ -17,6 +18,12 @@ yarn-error.log*
 
 # TypeScript build state
 *.tsbuildinfo
+
+# Archives and local tooling
+archive/
+.agents/
+skills-lock.json
+mailpass
 
 # OS/editor files
 .DS_Store

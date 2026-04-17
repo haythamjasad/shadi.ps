@@ -24,7 +24,6 @@ import { FC, TouchEvent, useEffect, useRef, useState } from "react";
 import SectionContainer from "../UI/SectionContainer";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.js?url";
-// import NumberedExpandableList from "../UI/NumberedExpandableList";
 
 const REPORT_CARD_GAP = 12;
 const REPORT_AUTO_SCROLL_MS = 2600;
@@ -166,7 +165,6 @@ const OurServices: FC = () => {
           const dataUrl = canvas.toDataURL("image/png");
           entries.push([report.href, dataUrl]);
         } catch (error) {
-          // ignore rendering errors; fallback to object embed
           // eslint-disable-next-line no-console
           console.error("Failed to render PDF thumbnail", error);
         }
@@ -255,14 +253,12 @@ const OurServices: FC = () => {
     const deltaY = Math.abs(
       (touchEndY.current ?? 0) - (touchStartY.current ?? 0),
     );
-    const threshold = 50; // minimum horizontal movement to count as swipe
+    const threshold = 50;
 
     if (Math.abs(deltaX) > threshold && Math.abs(deltaX) > deltaY) {
       if (deltaX < 0) {
-        // swipe left → next image
         handleNext();
       } else {
-        // swipe right → previous image
         handlePrevious();
       }
     }
@@ -331,9 +327,6 @@ const OurServices: FC = () => {
             alignItems="center"
             pt={{ xs: 1, md: 2 }}
           >
-            {/* <SectionTitle logo={<HandymanIcon style={{ fontSize: "50px" }} />}>
-             خدماتنا
-             </SectionTitle> */}
             <Typography
               sx={() => ({
                 color: logoColor,

@@ -1,12 +1,10 @@
 import { Location, ServiceType } from "@/types";
-import { ReactNode } from "react";
 
 export interface ServiceTypeItem {
   label: string;
   value: ServiceType;
   cost: number;
   zoomCost: number;
-  icon?: ReactNode;
 }
 
 export interface LocationItem {
@@ -14,7 +12,6 @@ export interface LocationItem {
   value: Location;
   cost: number;
   enabled: boolean;
-  icon?: ReactNode;
 }
 
 export interface AddTransactionPayload {

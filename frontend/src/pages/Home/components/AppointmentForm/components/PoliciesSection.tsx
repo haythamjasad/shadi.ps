@@ -22,7 +22,7 @@ const PoliciesSection: FC<PoliciesSectionProps> = ({
   transparency,
 }) => {
   return (
-    <Stack spacing={1.5}>
+    <>
       <Accordion
         sx={(theme) => ({
           border: `1px solid ${theme.palette.divider}`,
@@ -342,7 +342,7 @@ const PoliciesSection: FC<PoliciesSectionProps> = ({
       </Accordion>
 
       {/* Privacy Policy Agreement Checkbox */}
-      <Box sx={{ mt: 0.5 }}>
+      <Box sx={{ mt: 2 }}>
         <FormControlLabel
           control={
             <Checkbox
@@ -361,7 +361,7 @@ const PoliciesSection: FC<PoliciesSectionProps> = ({
         />
         {touched && error && <FormHelperText error>{error}</FormHelperText>}
       </Box>
-    </Stack>
+    </>
   );
 };
 

@@ -19,7 +19,7 @@ import { Trans } from "react-i18next";
 import ReCAPTCHA from "react-google-recaptcha";
 import LocationSelector from "./components/LocationSelector";
 import PoliciesSection from "./components/PoliciesSection";
-import { brand, logoColor } from "@/style/colors";
+import { logoColor } from "@/style/colors";
 import { initialValues, recaptchaEnabled, validationSchema } from "./form";
 import { AddTransactionPayload } from "./types";
 import SectionContainer from "../UI/SectionContainer";
@@ -107,12 +107,8 @@ const AppointmentForm: FC = () => {
         pt={2}
         pb={2}
       >
-        {/* <SectionTitle logo={<ClipboardClock size={40} strokeWidth={1.5} />}>
-          حجز استشارة
-        </SectionTitle> */}
         <Typography
           sx={() => ({
-            /*color: logoColor,*/
             width: "100%",
             fontSize: { xs: "14pt", md: "34pt" },
             fontWeight: "bold",
@@ -291,21 +287,24 @@ const AppointmentForm: FC = () => {
                 </Grid2>
                 <Grid2 size={{ xs: 12 }}>
                   <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={2}
-                    alignItems={{ xs: "stretch", sm: "center" }}
-                    justifyContent="space-between"
+                    direction="row"
+                    spacing={1.5}
+                    alignItems="center"
+                    justifyContent="flex-end"
                   >
                     <Paper
                       elevation={0}
                       sx={{
                         px: 2,
                         py: 1,
-                        borderRadius: 2,
+                        borderRadius: "4px",
                         minWidth: 200,
-                        backgroundColor: alpha(brand[50], 0.9),
-                        border: `1px solid ${alpha(accentColor, 0.3)}`,
-                        color: brand[700],
+                        backgroundColor: "#ffffff",
+                        border: "1px solid rgba(248, 159, 50, 0.35)",
+                        boxShadow: "none",
+                        "&:hover": {
+                          border: "1px solid rgba(248, 159, 50, 1)",
+                        },
                       }}
                     >
                       <Stack
@@ -317,7 +316,7 @@ const AppointmentForm: FC = () => {
                       >
                         <Typography
                           variant="subtitle2"
-                          sx={{ fontWeight: "bold", color: "#f7f5ef" }}
+                          sx={{ fontWeight: "bold", color: alpha("#000000", 0.7) }}
                         >
                           إجمالي الدفع
                         </Typography>
@@ -336,13 +335,12 @@ const AppointmentForm: FC = () => {
                       endIcon={<CircleDollarSign />}
                       sx={{
                         minWidth: "140px",
-                        background: "linear-gradient(135deg, #f1b14e, #f29a2c)",
-                        borderColor: alpha(accentColor, 0.7),
-                        color: "#3a2304",
-                        boxShadow: "0 12px 24px rgba(0,0,0,0.25)",
+                        borderRadius: "4px",
+                        border: "1px solid rgba(248, 159, 50, 0.35)",
+                        boxShadow: "none",
                         "&:hover": {
-                          background: "linear-gradient(135deg, #f1b14e, #f29a2c)",
-                          boxShadow: "0 14px 26px rgba(0,0,0,0.28)",
+                          boxShadow: "none",
+                          border: "1px solid rgba(248, 159, 50, 1)",
                         },
                       }}
                       loading={isAddPending}
