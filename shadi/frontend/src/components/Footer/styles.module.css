@@ -1,0 +1,328 @@
+.footerShell {
+  width: 100%;
+}
+
+.outerFooter {
+  background: #d9d9de;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.footerInner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  padding: 12px 12px 64px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+.mobileAccentOrange,
+.mobileAccentDark,
+.mobileCorner,
+.desktopAccentOrange,
+.desktopAccentDark,
+.desktopCorner {
+  position: absolute;
+}
+
+.mobileAccentOrange {
+  inset-inline: 0;
+  bottom: 0;
+  height: 12px;
+  background: #f89c1c;
+}
+
+.mobileAccentDark {
+  inset-inline: 0;
+  bottom: 12px;
+  height: 6px;
+  background: #1f1f27;
+}
+
+.mobileCorner {
+  left: 0;
+  bottom: 0;
+  width: 112px;
+  height: 48px;
+  border-top-right-radius: 36px;
+  background: #1f1f27;
+}
+
+.desktopAccentOrange,
+.desktopAccentDark,
+.desktopCorner,
+.desktopLogoBadge,
+.desktopMetaRow,
+.desktopRightsText,
+.companyBlock,
+.footerContent {
+  display: none;
+}
+
+.footerSpacer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.mobileTopRow {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-inline: 12px;
+}
+
+.mobileContent {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.mobileSocialRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-size: 17px;
+}
+
+.mobileLogoBadge {
+  display: flex;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #f89c1c;
+  border-radius: 999px;
+  background: #fafafa;
+  box-shadow: inset 0 0 0 1px rgba(31, 31, 39, 0.06);
+}
+
+.brandLogo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.socialLink:hover {
+  opacity: 0.8;
+}
+
+.facebook {
+  color: #2563eb;
+}
+
+.instagram {
+  color: #ec4899;
+}
+
+.tiktok {
+  color: #000000;
+}
+
+.whatsapp {
+  color: #22c55e;
+}
+
+.email {
+  color: #ef4444;
+}
+
+.mobileCardIcon {
+  width: auto;
+  height: 14px;
+  object-fit: contain;
+}
+
+.mobileRightsText {
+  color: #374151;
+  text-align: right;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.policyLink,
+.policyLinkDesktop {
+  display: inline;
+  margin: 0;
+  margin-left: 4px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #f89c1c;
+  font: inherit;
+  cursor: pointer;
+}
+
+.policyLink:hover,
+.policyLinkDesktop:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+  .outerFooter {
+    padding-bottom: 0;
+  }
+
+  .footerInner {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 32px 32px 48px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+  }
+
+  .mobileAccentOrange,
+  .mobileAccentDark,
+  .mobileCorner,
+  .mobileTopRow {
+    display: none;
+  }
+
+  .desktopAccentOrange,
+  .desktopAccentDark,
+  .desktopCorner,
+  .desktopLogoBadge,
+  .desktopMetaRow,
+  .desktopRightsText,
+  .companyBlock,
+  .footerContent {
+    display: block;
+  }
+
+  .desktopAccentOrange {
+    inset-inline: 0;
+    bottom: 0;
+    height: 16px;
+    background: #f89c1c;
+  }
+
+  .desktopAccentDark {
+    inset-inline: 0;
+    bottom: 16px;
+    height: 8px;
+    background: #1f1f27;
+  }
+
+  .desktopCorner {
+    left: 0;
+    bottom: 0;
+    width: 160px;
+    height: 64px;
+    border-top-right-radius: 48px;
+    background: #1f1f27;
+  }
+
+  .desktopLogoBadge {
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    z-index: 1;
+    display: flex;
+    width: 150px;
+    height: 150px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 4px solid #f89c1c;
+    border-radius: 999px;
+    background: #fafafa;
+    box-shadow: inset 0 0 0 1px rgba(31, 31, 39, 0.06);
+  }
+
+  .footerSpacer {
+    width: 50%;
+    order: 1;
+  }
+
+  .footerContent {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 50%;
+    order: 2;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 12px;
+    padding-right: 180px;
+  }
+
+  .companyBlock {
+    width: 100%;
+    text-align: right;
+  }
+
+  .companyName {
+    color: #262231;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 28px;
+  }
+
+  .companyDescription {
+    margin-top: 4px;
+    color: #262231;
+    font-size: 15px;
+  }
+
+  .desktopMetaRow {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    white-space: nowrap;
+    border-top: 1px solid #d9d9de;
+    padding-top: 16px;
+  }
+
+  .desktopSocialRow {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 20px;
+    font-size: 30px;
+  }
+
+  .desktopPaymentRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-right: 8px;
+  }
+
+  .desktopCardIcon {
+    width: auto;
+    height: 28px;
+    object-fit: contain;
+  }
+
+  .desktopRightsText {
+    max-width: 34rem;
+    color: #6b7280;
+    text-align: right;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+}

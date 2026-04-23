@@ -1,0 +1,82 @@
+{
+  "short_name": "Shadi Store",
+  "name": "Shadi Store - مواد البناء والسباكة والعزل",
+  "description": "مواد البناء والسباكة والعزل بجودة عالية وأسعار مناسبة",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#8B4513",
+  "background_color": "#ffffff",
+  "prefer_related_applications": false,
+  "categories": ["shopping", "lifestyle"],
+  "screenshots": [
+    {
+      "src": "screenshots/home-app.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "platform": "narrow", 
+      "label": "الواجهة الرئيسية - عرض الهاتف"
+    },
+    {
+      "src": "screenshots/acc-app.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "كتالوج المنتجات - عرض الهاتف"
+    },
+    {
+      "src": "screenshots/home-web.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "الواجهة الرئيسية - عرض سطح المكتب"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "السلة",
+      "url": "/cart",
+      "description": "عرض سلة التسوق",
+      "icons": [{ "src": "/icons/cart.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "الحساب", 
+      "url": "/profile",
+      "description": "عرض بيانات الحساب",
+      "icons": [{ "src": "/icons/account.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "dir": "rtl",
+  "lang": "ar-PS",
+  "launch_handler": {
+    "client_mode": ["auto", "navigate"]
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred"
+}

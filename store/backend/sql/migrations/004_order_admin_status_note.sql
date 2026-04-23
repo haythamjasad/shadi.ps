@@ -1,0 +1,1 @@
+ALTER TABLE `orders` ADD COLUMN `admin_status_note` TEXT NULL AFTER `status`;

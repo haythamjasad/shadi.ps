@@ -1,0 +1,23 @@
+# Keep your cPanel Passenger block above these rules.
+# Replace CPANEL_USER and Node version/path with your real cPanel values.
+
+PassengerAppRoot "/home/CPANEL_USER/app/store.shadi.ps"
+PassengerBaseURI "/api/v01"
+PassengerNodejs "/home/CPANEL_USER/nodevenv/app/store.shadi.ps/18/bin/node"
+PassengerAppType node
+PassengerStartupFile start.cjs
+
+Options -MultiViews
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Never rewrite API requests to the React storefront.
+RewriteRule ^api/v01(?:/|$) - [END,NC]
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [END]
+
+RewriteRule ^ index.html [END]
+</IfModule>
