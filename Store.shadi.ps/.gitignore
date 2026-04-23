@@ -1,5 +1,0 @@
-# Secrets and local runtime configs
-**/.env
-**/.env.local
-**/.env.*.local
-backend/mailpass
