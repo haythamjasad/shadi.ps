@@ -82,13 +82,13 @@ function createBlankOrderItem(overrides = {}) {
 const ACCOUNTING_TABLE_COLUMNS = {
   suppliers: [
     { key: 'supplier', label: 'المورد' },
-    { key: 'contact', label: 'التواصل', defaultVisible: false },
+    { key: 'contact', label: 'التواصل' },
     { key: 'products', label: 'المنتجات' },
     { key: 'total_sales', label: 'إجمالي البيع', defaultVisible: false },
     { key: 'purchase_total', label: 'إجمالي الشراء', defaultVisible: false },
-    { key: 'net_profit', label: 'صافي الربح' },
+    { key: 'net_profit', label: 'صافي الربح', defaultVisible: false },
     { key: 'payments', label: 'الدفعات', defaultVisible: false },
-    { key: 'net_movement', label: 'صافي الحركة', defaultVisible: false },
+    { key: 'net_movement', label: 'صافي الحركة' },
     { key: 'balance', label: 'الرصيد' },
     { key: 'statement', label: 'كشف الحساب' },
     { key: 'actions', label: 'إجراءات' }
@@ -102,10 +102,10 @@ const ACCOUNTING_TABLE_COLUMNS = {
     { key: 'total_sales', label: 'إجمالي البيع', defaultVisible: false },
     { key: 'purchase_total', label: 'إجمالي الشراء', defaultVisible: false },
     { key: 'receipts', label: 'المقبوضات/الخصومات', defaultVisible: false },
-    { key: 'net', label: 'الصافي', defaultVisible: false },
-    { key: 'net_profit', label: 'صافي الربح' },
+    { key: 'net', label: 'الصافي' },
+    { key: 'net_profit', label: 'صافي الربح', defaultVisible: false },
     { key: 'balance', label: 'الرصيد' },
-    { key: 'last_order', label: 'آخر طلب', defaultVisible: false },
+    { key: 'last_order', label: 'آخر طلب' },
     { key: 'statement', label: 'كشف/تحميل' },
     { key: 'actions', label: 'إجراءات' }
   ],
@@ -942,14 +942,10 @@ function PurchasingAccounting({ setError, currentAdmin }) {
   const [reportFilters, setReportFilters] = useState({ date_from: '', date_to: '', supplier_id: '', client_id: '', status: '', balance_filter: '', client_type: 'all' });
   const [accountingSearch, setAccountingSearch] = useState({ suppliers: '', clients: '', vouchers: '', journal: '', clientJournal: '', report: '', clientReport: '', customerReport: '' });
   const [accountingFilters, setAccountingFilters] = useState({ supplierBalance: '', clientBalance: '', voucherScope: '', voucherAccountKey: '', voucherType: '', journalSupplierId: '', journalType: '', clientJournalClientId: '', clientJournalType: '' });
+  const [activeStatementView, setActiveStatementView] = useState(null);
   const [supplierStatement, setSupplierStatement] = useState(null);
-  const [collapsedStatementEntryIds, setCollapsedStatementEntryIds] = useState([]);
-  const [supplierInvoice, setSupplierInvoice] = useState(null);
-  const [voucherCollapsedDetailKeys, setVoucherCollapsedDetailKeys] = useState([]);
-  const [voucherDetailCache, setVoucherDetailCache] = useState({});
   const [clientStatement, setClientStatement] = useState(null);
-  const [linkedOrderPreview, setLinkedOrderPreview] = useState(null);
-  const [linkedOrderContextKey, setLinkedOrderContextKey] = useState('');
+  const [transactionDetailModal, setTransactionDetailModal] = useState(null);
   const [customerStatement, setCustomerStatement] = useState(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -970,6 +966,7 @@ function PurchasingAccounting({ setError, currentAdmin }) {
   const [clientJournalSaving, setClientJournalSaving] = useState(false);
   const journalIdempotencyKeyRef = useRef(null);
   const clientJournalIdempotencyKeyRef = useRef(null);
+  const accountingListScrollRef = useRef(0);
   const [accountingTab, setAccountingTab] = useState('suppliers');
   const [accountingFilterPanelsOpen, setAccountingFilterPanelsOpen] = useState({ suppliers: false, clients: false, vouchers: false });
   const [accountingColumns, setAccountingColumns] = useState(() => loadSavedAccountingColumns());
@@ -1120,67 +1117,141 @@ function PurchasingAccounting({ setError, currentAdmin }) {
     const parsed = match ? Number(match[1]) : 0;
     return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
   };
+  const renderAccountingMetric = (label, value, className = '') => (
+    <div className={`accounting-metric ${className}`.trim()}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+  const getStatementDebitCredit = (entry) => {
+    const amount = Number(entry?.amount || 0);
+    if (entry?.transaction_type === 'debit') return { debit: amount, credit: 0 };
+    if (entry?.transaction_type === 'credit') return { debit: 0, credit: amount };
+    return { debit: 0, credit: 0 };
+  };
+  const getActiveStatementData = () => {
+    if (!activeStatementView) return null;
+    if (activeStatementView.type === 'supplier' && supplierStatement) {
+      const reportRow = supplierUnifiedRows.find((row) => Number(row.supplier_id) === Number(supplierStatement.supplier?.id)) || {};
+      return {
+        type: 'supplier',
+        title: `كشف حساب المورد: ${supplierStatement.supplier?.name || '-'}`,
+        subtitle: `الرصيد الحالي: ${formatMoney(supplierStatement.supplier?.account_balance)}`,
+        rows: supplierStatement.rows || [],
+        exportAction: () => exportSupplierStatement('xlsx'),
+        contextKey: `supplier-statement:${supplierStatement.supplier?.id}`,
+        summary: [
+          ['إجمالي البيع', formatMoney(reportRow.total_sales)],
+          ['إجمالي الشراء', formatMoney(reportRow.purchase_total || reportRow.total_purchases)],
+          ['صافي الربح', formatMoney(reportRow.net_profit)],
+          ['الدفعات / الحركة', `${formatMoney(reportRow.total_payments)} / ${formatMoney(reportRow.net_movement)}`],
+          ['الرصيد', formatMoney(supplierStatement.supplier?.account_balance), 'balance']
+        ],
+        typeLabel: getSupplierVoucherLabel
+      };
+    }
+    if (activeStatementView.type === 'client' && clientStatement) {
+      const reportRow = clientUnifiedRows.find((row) => Number(row.client_id) === Number(clientStatement.client?.id)) || {};
+      return {
+        type: 'client',
+        title: `كشف حساب العميل: ${clientStatement.client?.name || '-'}`,
+        subtitle: `الرصيد الحالي: ${formatMoney(clientStatement.client?.account_balance)}`,
+        rows: clientStatement.rows || [],
+        exportAction: () => exportClientStatement('xlsx'),
+        contextKey: `client-statement:${reportRow.key || clientStatement.client?.id}`,
+        summary: [
+          ['إجمالي الطلبات', formatMoney(reportRow.total_sales)],
+          ['المقبوضات/الخصومات', formatMoney(reportRow.total_receipts)],
+          ['الصافي المستحق', formatMoney(reportRow.net_movement)],
+          ['الرصيد', formatMoney(clientStatement.client?.account_balance), 'balance'],
+          ['عدد الطلبات', reportRow.orders_count || 0]
+        ],
+        typeLabel: getClientVoucherLabel
+      };
+    }
+    if (activeStatementView.type === 'customer' && customerStatement) {
+      return {
+        type: 'customer',
+        title: `كشف حساب العميل: ${customerStatement.customer?.customer_name || '-'}`,
+        subtitle: `عدد القطع: ${customerStatement.summary?.items_quantity || 0}`,
+        rows: customerStatement.rows || [],
+        exportAction: () => downloadReport(`/admin/purchasing/reports/customers/${encodeURIComponent(customerStatement.customer?.customer_key || '')}/orders/export`, 'xlsx', { date_from: reportFilters.date_from, date_to: reportFilters.date_to, supplier_id: '', status: 'delivered' }),
+        contextKey: `customer-statement:${customerStatement.customer?.key || customerStatement.customer?.customer_key}`,
+        summary: [
+          ['إجمالي الطلبات', formatMoney(customerStatement.summary?.subtotal)],
+          ['الخصومات', formatMoney(customerStatement.summary?.discount_amount)],
+          ['الصافي المستحق', formatMoney(customerStatement.summary?.total), 'balance'],
+          ['عدد الطلبات', customerStatement.summary?.orders_count || 0],
+          ['عدد القطع', customerStatement.summary?.items_quantity || 0]
+        ],
+        typeLabel: () => 'طلب متجر'
+      };
+    }
+    return null;
+  };
+  const closeStatementView = () => {
+    setActiveStatementView(null);
+    setSupplierStatement(null);
+    setClientStatement(null);
+    setCustomerStatement(null);
+    setTransactionDetailModal(null);
+    window.requestAnimationFrame(() => window.scrollTo({ top: accountingListScrollRef.current || 0 }));
+  };
+  const openTransactionDetailModal = async (entry, contextKey = '', options = {}) => {
+    const orderId = getEntryOrderId(entry);
+    const isSupplierInvoice = (entry?.voucherScope === 'supplier' || options.type === 'supplier') && entry?.voucher_type === 'purchase_invoice';
+    const kind = options.kind || (isSupplierInvoice && entry?.supplier_id ? 'supplier_invoice' : (orderId ? 'order' : 'entry'));
+    setTransactionDetailModal({ kind, title: options.title || 'تفاصيل الحركة', loading: true, error: '', data: null, entry });
+    try {
+      let data = { entry };
+      if (kind === 'supplier_invoice') {
+        const supplierId = options.supplierId || entry?.supplier_id || supplierStatement?.supplier?.id;
+        data = await apiGet(`/admin/suppliers/${supplierId}/purchase-invoices/${entry.id}`);
+      } else if (kind === 'order' && orderId) {
+        data = await apiGet(`/admin/orders/${orderId}`);
+      } else if (kind === 'customer_order') {
+        data = { order: entry, items: [entry] };
+      } else if (kind === 'statement_items') {
+        data = { order: entry, items: entry?.items || [] };
+      }
+      setTransactionDetailModal({ kind, title: options.title || 'تفاصيل الحركة', loading: false, error: '', data, entry });
+    } catch (err) {
+      setTransactionDetailModal({ kind, title: options.title || 'تفاصيل الحركة', loading: false, error: err.message || 'فشل تحميل التفاصيل', data: null, entry });
+    }
+  };
   const renderStatementRows = (rows = [], emptyText, options = {}) => {
     if (!rows.length) return <p className="muted">{emptyText}</p>;
     const typeLabel = options.typeLabel || ((entry) => entry.transaction_type === 'credit' ? 'فاتورة شراء' : 'دفعة');
-    const referenceRenderer = options.referenceRenderer || ((entry) => entry.reference_doc || '-');
-    const collapsedEntryIds = (options.collapsedEntryIds || []).map((id) => String(id));
-    const onToggleEntry = options.onToggleEntry;
     const statementColumns = visibleAccountingColumns('statements');
-    const statementGridTemplate = statementColumns.map((column) => {
-      if (column.key === 'reference') return '1.25fr';
-      if (column.key === 'type' || column.key === 'note') return '1fr';
-      return '0.8fr';
-    }).join(' ');
+    const showStatementColumn = (key) => statementColumns.some((column) => column.key === key);
     return (
-      <div className="statement-row-list">
-        <div className="statement-row statement-row-heading" style={{ '--statement-grid-template': statementGridTemplate, gridTemplateColumns: statementGridTemplate }}>
-          {statementColumns.map((column) => <strong key={column.key}>{column.label}</strong>)}
-        </div>
+      <div className="statement-ledger-list">
         {rows.map((entry) => {
-          const isExpanded = !collapsedEntryIds.includes(String(entry.id));
           const hasItems = (entry.items || []).length > 0;
-          const statementCellByKey = {
-            type: <strong data-label="النوع">{typeLabel(entry)}</strong>,
-            date: <span data-label="التاريخ">{String(entry.date || '').slice(0, 10)}</span>,
-            amount: <span data-label="المبلغ">{formatMoney(entry.amount)}</span>,
-            total_sales: <span data-label="إجمالي البيع">{entry.items?.length ? formatMoney(entry.total_sales) : '-'}</span>,
-            purchase_total: <span data-label="إجمالي الشراء">{entry.items?.length ? formatMoney(entry.purchase_total) : '-'}</span>,
-            net_profit: <span data-label="صافي الربح">{entry.items?.length ? formatMoney(entry.net_profit) : '-'}</span>,
-            balance: <span data-label="الرصيد">{formatMoney(entry.running_balance)}</span>,
-            reference: <span data-label="المرجع">{referenceRenderer(entry, { isExpanded, hasItems })}</span>,
-            note: <span data-label="ملاحظة">{entry.note || '-'}</span>
-          };
+          const entryOrderId = getEntryOrderId(entry);
+          const { debit, credit } = getStatementDebitCredit(entry);
+          const canShowDetails = hasItems || entryOrderId || (options.type === 'supplier' && entry.voucher_type === 'purchase_invoice');
           return (
-            <React.Fragment key={entry.id}>
-              <div className="statement-row statement-row-main" style={{ '--statement-grid-template': statementGridTemplate, gridTemplateColumns: statementGridTemplate }}>
-                {statementColumns.map((column) => (
-                  <React.Fragment key={column.key}>{statementCellByKey[column.key]}</React.Fragment>
-                ))}
+            <article className="statement-ledger-entry" key={entry.id}>
+              <div className="statement-ledger-head">
+                <div className="statement-ledger-title">
+                  {showStatementColumn('type') && <span className="accounting-badge">{typeLabel(entry)}</span>}
+                  <strong>{entry.id ? `#${entry.id}` : 'حركة حساب'}</strong>
+                  {entryOrderId && <span className="statement-ledger-subtitle">طلب #{entryOrderId}</span>}
+                </div>
+                {canShowDetails && <button type="button" className="secondary" onClick={() => openTransactionDetailModal(entry, options.contextKey, { kind: hasItems ? 'statement_items' : (options.type === 'supplier' && entry.voucher_type === 'purchase_invoice' ? 'supplier_invoice' : 'order'), title: 'تفاصيل الحركة' })}>التفاصيل</button>}
               </div>
-              {isExpanded && hasItems && (
-                <>
-                  <div className="statement-row statement-row-item statement-row-item-heading">
-                    <strong>النوع</strong>
-                    <strong>الصنف</strong>
-                    <strong>الكمية</strong>
-                    <strong>سعر البيع</strong>
-                    <strong>سعر الشراء</strong>
-                    <strong>صافي الربح</strong>
-                  </div>
-                  {(entry.items || []).map((item, index) => (
-                    <div className="statement-row statement-row-item" key={`${entry.id}-${item.product_id || item.product_name || index}`}>
-                      <span data-label="النوع">الصنف</span>
-                      <span data-label="الصنف">{item.product_name || '-'}</span>
-                      <span data-label="الكمية">{item.quantity || 0}</span>
-                      <span data-label="سعر البيع">{formatMoney(item.unit_price)}</span>
-                      <span data-label="سعر الشراء">{formatMoney(item.purchase_price)}</span>
-                      <span data-label="صافي الربح">{formatMoney(item.profit_total)}</span>
-                    </div>
-                  ))}
-                </>
-              )}
-            </React.Fragment>
+              <div className="statement-ledger-metrics">
+                {showStatementColumn('date') && renderAccountingMetric('التاريخ', String(entry.date || '').slice(0, 10) || '-')}
+                {showStatementColumn('amount') && renderAccountingMetric('مدين', debit ? formatMoney(debit) : '-', debit ? 'debit' : '')}
+                {showStatementColumn('amount') && renderAccountingMetric('دائن', credit ? formatMoney(credit) : '-', credit ? 'credit' : '')}
+                {showStatementColumn('balance') && renderAccountingMetric('الرصيد', formatMoney(entry.running_balance), 'balance')}
+                {showStatementColumn('reference') && renderAccountingMetric('المرجع/الطلب', entry.reference_doc || (entryOrderId ? `طلب #${entryOrderId}` : '-'))}
+                {entry.product_names && renderAccountingMetric('الأصناف', entry.product_names)}
+                {entry.created_at && renderAccountingMetric('وقت التسجيل', String(entry.created_at || '').slice(0, 16).replace('T', ' '))}
+              </div>
+              {showStatementColumn('note') && <p className="statement-ledger-note">{entry.note || '-'}</p>}
+            </article>
           );
         })}
       </div>
@@ -1189,32 +1260,22 @@ function PurchasingAccounting({ setError, currentAdmin }) {
   const renderCustomerOrderRows = (rows = [], emptyText, contextKey = '') => {
     if (!rows.length) return <p className="muted">{emptyText}</p>;
     return (
-      <div className="statement-row-list">
-        <div className="statement-row customer-order-row statement-row-heading">
-          <strong>الطلب</strong>
-          <strong>التاريخ</strong>
-          <strong>المنتج</strong>
-          <strong>الكمية</strong>
-          <strong>سعر البيع</strong>
-          <strong>سعر الشراء</strong>
-          <strong>إجمالي البيع</strong>
-          <strong>إجمالي الشراء</strong>
-          <strong>الخصم</strong>
-          <strong>صافي الربح</strong>
-        </div>
+      <div className="statement-detail-list">
         {rows.map((entry, index) => (
-          <div className="statement-row customer-order-row" key={`${entry.order_id}-${entry.product_id || 'item'}-${index}`}>
-            <span data-label="الطلب"><button type="button" className="link-button" onClick={() => openLinkedOrder(entry.order_id, contextKey)}>{isLinkedOrderOpenFor(entry.order_id, contextKey) ? 'إخفاء التفاصيل' : `#${entry.order_id}`}</button></span>
-            <span data-label="التاريخ">{String(entry.created_at || '').slice(0, 10)}</span>
-            <span data-label="المنتج">{entry.product_name || '-'}</span>
-            <span data-label="الكمية">{entry.quantity || 0}</span>
-            <span data-label="سعر البيع">{formatMoney(entry.unit_price)}</span>
-            <span data-label="سعر الشراء">{formatMoney(entry.purchase_price)}</span>
-            <span data-label="إجمالي البيع">{formatMoney(entry.line_total)}</span>
-            <span data-label="إجمالي الشراء">{formatMoney(entry.purchase_total)}</span>
-            <span data-label="الخصم">{formatMoney(entry.discount_amount)}</span>
-            <span data-label="صافي الربح">{formatMoney(entry.profit_total)}</span>
-          </div>
+          <article className="statement-detail-card" key={`${entry.order_id}-${entry.product_id || 'item'}-${index}`}>
+            <div className="statement-detail-title">
+              <button type="button" className="link-button" onClick={() => openTransactionDetailModal(entry, contextKey, { kind: 'order', title: `تفاصيل طلب #${entry.order_id}` })}>طلب #{entry.order_id}</button>
+              <strong>{entry.product_name || '-'}</strong>
+            </div>
+            <div className="statement-detail-metrics">
+              {renderAccountingMetric('التاريخ', String(entry.created_at || '').slice(0, 10) || '-')}
+              {entry.status && renderAccountingMetric('الحالة', entry.status)}
+              {renderAccountingMetric('الكمية', entry.quantity || 0)}
+              {renderAccountingMetric('إجمالي البيع', formatMoney(entry.line_total))}
+              {renderAccountingMetric('الخصم', formatMoney(entry.discount_amount))}
+              {renderAccountingMetric('الصافي', formatMoney(entry.total), 'balance')}
+            </div>
+          </article>
         ))}
       </div>
     );
@@ -1222,30 +1283,23 @@ function PurchasingAccounting({ setError, currentAdmin }) {
   const renderSupplierInvoiceRows = (invoiceData) => {
     const rows = invoiceData?.rows || [];
     return (
-      <div className="statement-row-list">
-        <div className="statement-row supplier-invoice-row statement-row-heading">
-          <strong>رقم الطلب</strong>
-          <strong>التاريخ</strong>
-          <strong>العميل</strong>
-          <strong>المنتج</strong>
-          <strong>الكمية</strong>
-          <strong>سعر البيع</strong>
-          <strong>سعر الشراء</strong>
-          <strong>إجمالي الربح</strong>
-          <strong>إجمالي الشراء</strong>
-        </div>
+      <div className="statement-detail-list">
         {rows.map((row) => (
-          <div className="statement-row supplier-invoice-row" key={row.order_item_id || `${row.order_id}-${row.product_id}`}>
-            <span data-label="رقم الطلب">#{row.order_id}</span>
-            <span data-label="التاريخ">{String(row.created_at || '').slice(0, 10)}</span>
-            <span data-label="العميل">{row.customer_name || '-'}</span>
-            <span data-label="المنتج">{row.product_name || '-'}</span>
-            <span data-label="الكمية">{row.quantity || 0}</span>
-            <span data-label="سعر البيع">{formatMoney(row.unit_price)}</span>
-            <span data-label="سعر الشراء">{formatMoney(row.purchase_price)}</span>
-            <span data-label="إجمالي الربح">{formatMoney(row.profit_total)}</span>
-            <span data-label="إجمالي الشراء">{formatMoney(row.purchase_total)}</span>
-          </div>
+          <article className="statement-detail-card" key={row.order_item_id || `${row.order_id}-${row.product_id}`}>
+            <div className="statement-detail-title">
+              <strong>{row.product_name || '-'}</strong>
+              <span>طلب #{row.order_id}</span>
+            </div>
+            <div className="statement-detail-metrics">
+              {renderAccountingMetric('التاريخ', String(row.created_at || '').slice(0, 10) || '-')}
+              {renderAccountingMetric('العميل', row.customer_name || '-')}
+              {renderAccountingMetric('الكمية', row.quantity || 0)}
+              {renderAccountingMetric('سعر البيع', formatMoney(row.unit_price))}
+              {renderAccountingMetric('سعر الشراء', formatMoney(row.purchase_price))}
+              {renderAccountingMetric('إجمالي الربح', formatMoney(row.profit_total), 'balance')}
+              {renderAccountingMetric('إجمالي الشراء', formatMoney(row.purchase_total))}
+            </div>
+          </article>
         ))}
         {rows.length === 0 && <p className="muted statement-empty-row">لا توجد تفاصيل طلب مرتبطة بهذا المرجع</p>}
       </div>
@@ -1254,61 +1308,83 @@ function PurchasingAccounting({ setError, currentAdmin }) {
   const renderLinkedOrderRows = (orderData) => {
     const rows = orderData?.items || [];
     return (
-      <div className="statement-row-list">
-        <div className="statement-row linked-order-row statement-row-item-heading">
-          <strong>النوع</strong>
-          <strong>الصنف</strong>
-          <strong>الكمية</strong>
-          <strong>سعر البيع</strong>
-          <strong>سعر الشراء</strong>
-          <strong>صافي الربح</strong>
-        </div>
+      <div className="statement-detail-list">
         {rows.map((item) => (
-          <div className="statement-row linked-order-row" key={item.id || `${item.product_id}-${item.product_name}`}>
-            <span data-label="النوع">الصنف</span>
-            <span data-label="الصنف">{item.product_name || '-'}</span>
-            <span data-label="الكمية">{item.quantity || 0}</span>
-            <span data-label="سعر البيع">{formatMoney(item.unit_price)}</span>
-            <span data-label="سعر الشراء">{formatMoney(item.purchase_price)}</span>
-            <span data-label="صافي الربح">{formatMoney(item.profit_total)}</span>
-          </div>
+          <article className="statement-detail-card compact" key={item.id || `${item.product_id}-${item.product_name}`}>
+            <div className="statement-detail-title">
+              <strong>{item.product_name || '-'}</strong>
+              <span>الصنف</span>
+            </div>
+            <div className="statement-detail-metrics">
+              {renderAccountingMetric('الكمية', item.quantity || 0)}
+              {renderAccountingMetric('سعر البيع', formatMoney(item.unit_price))}
+              {renderAccountingMetric('سعر الشراء', formatMoney(item.purchase_price))}
+              {renderAccountingMetric('صافي الربح', formatMoney(item.profit_total), 'balance')}
+            </div>
+          </article>
         ))}
         {rows.length === 0 && <p className="muted statement-empty-row">لا توجد منتجات لهذا الطلب</p>}
       </div>
     );
   };
-  const isLinkedOrderOpenFor = (orderId, contextKey = '') => (
-    Number(linkedOrderPreview?.order?.id) === Number(orderId)
-    && String(linkedOrderContextKey || '') === String(contextKey || '')
-  );
-  const statementHasLinkedOrder = (rows = [], contextKey = '') => rows.some((row) => Number(row.order_id) === Number(linkedOrderPreview?.order?.id)) && (!contextKey || String(linkedOrderContextKey || '') === String(contextKey));
-  const renderLinkedOrderSection = () => {
-    if (!linkedOrderPreview) return null;
+  const renderTransactionDetailModal = () => {
+    if (!transactionDetailModal) return null;
+    const { kind, title, loading: detailLoading, error: detailError, data, entry } = transactionDetailModal;
+    const rows = kind === 'supplier_invoice' ? (data?.rows || []) : (data?.items || []);
     return (
-      <div className="inline-statement-section">
-        {renderLinkedOrderRows(linkedOrderPreview)}
+      <div className="modal-backdrop">
+        <div className="modal accounting-detail-modal" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-header">
+            <h3>{title}</h3>
+            <button className="modal-close" type="button" aria-label="إغلاق" onClick={() => setTransactionDetailModal(null)}>×</button>
+          </div>
+          {detailLoading && <p className="muted">جارٍ تحميل التفاصيل...</p>}
+          {detailError && <p className="error">{detailError}</p>}
+          {!detailLoading && !detailError && (
+            <div className="accounting-detail-body">
+              {kind === 'supplier_invoice' && (
+                <>
+                  <div className="accounting-summary-grid">
+                    {renderAccountingMetric('المورد', data?.invoice?.supplier_name || '-')}
+                    {renderAccountingMetric('المرجع', data?.invoice?.reference_doc || entry?.reference_doc || '-')}
+                    {renderAccountingMetric('المبلغ', formatMoney(data?.invoice?.amount ?? entry?.amount), 'credit')}
+                  </div>
+                  {renderSupplierInvoiceRows(data)}
+                </>
+              )}
+              {(kind === 'order' || kind === 'customer_order' || kind === 'statement_items') && (
+                <>
+                  <div className="accounting-summary-grid">
+                    {renderAccountingMetric('رقم الطلب', `#${data?.order?.id || entry?.order_id || getEntryOrderId(entry) || '-'}`)}
+                    {renderAccountingMetric('الحالة', data?.order?.status || entry?.status || '-')}
+                    {renderAccountingMetric('قبل الخصم', formatMoney(data?.order?.subtotal ?? entry?.subtotal))}
+                    {renderAccountingMetric('الخصم', formatMoney(data?.order?.discount_amount ?? entry?.discount_amount))}
+                    {renderAccountingMetric('الإجمالي النهائي', formatMoney(data?.order?.total ?? entry?.total), 'balance')}
+                  </div>
+                  {renderLinkedOrderRows({ items: rows })}
+                </>
+              )}
+              {kind === 'entry' && (
+                <div className="accounting-summary-grid">
+                  {renderAccountingMetric('الحركة', entry?.voucher_type || entry?.transaction_type || '-')}
+                  {renderAccountingMetric('المبلغ', formatMoney(entry?.amount), 'balance')}
+                  {renderAccountingMetric('المرجع', entry?.reference_doc || '-')}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
-  };
-  const toggleStatementEntryDetails = (entryId) => {
-    const key = String(entryId || '');
-    if (!key) return;
-    setCollapsedStatementEntryIds((current) => (
-      current.map((id) => String(id)).includes(key)
-        ? current.filter((id) => String(id) !== key)
-        : [...current, key]
-    ));
   };
   const updateReportFilters = (patch, options = {}) => {
     const nextFilters = { ...reportFilters, ...patch };
     setReportFilters(nextFilters);
+    setActiveStatementView(null);
     setSupplierStatement(null);
-    setSupplierInvoice(null);
     setClientStatement(null);
     setCustomerStatement(null);
-    setCollapsedStatementEntryIds([]);
-    setLinkedOrderPreview(null);
-    setLinkedOrderContextKey('');
+    setTransactionDetailModal(null);
     if (options.clearSearchKey) setAccountingSearchValue(options.clearSearchKey, '');
     loadReports(nextFilters);
   };
@@ -1438,66 +1514,13 @@ function PurchasingAccounting({ setError, currentAdmin }) {
     return kind ? `${kind}:${entry.key}` : '';
   };
   const toggleVoucherDetail = (entry) => {
-    const key = getVoucherDetailKey(entry);
-    if (!key) return;
-    setVoucherCollapsedDetailKeys((current) => (
-      current.includes(key)
-        ? current.filter((item) => item !== key)
-        : [...current, key]
-    ));
-  };
-  const retryVoucherDetail = (entry) => {
-    const key = getVoucherDetailKey(entry);
-    if (!key) return;
-    setVoucherCollapsedDetailKeys((current) => current.filter((item) => item !== key));
-    setVoucherDetailCache((current) => {
-      const next = { ...current };
-      delete next[key];
-      return next;
+    const kind = getVoucherDetailKind(entry);
+    if (!kind) return;
+    openTransactionDetailModal(entry, `voucher:${entry.key}`, {
+      kind: kind === 'supplier_invoice' ? 'supplier_invoice' : 'order',
+      title: kind === 'supplier_invoice' ? 'تفاصيل فاتورة الشراء' : `تفاصيل طلب #${getEntryOrderId(entry)}`
     });
   };
-  useEffect(() => {
-    if (accountingTab !== 'vouchers') return;
-    const activeDetailLoads = Object.values(voucherDetailCache).filter((state) => state?.loading).length;
-    const availableDetailSlots = Math.max(0, 4 - activeDetailLoads);
-    if (availableDetailSlots === 0) return;
-    const entriesToLoad = voucherUnifiedRows.filter((entry) => {
-      const key = getVoucherDetailKey(entry);
-      return key && !voucherCollapsedDetailKeys.includes(key) && !voucherDetailCache[key];
-    }).slice(0, availableDetailSlots);
-    if (!entriesToLoad.length) return;
-    setVoucherDetailCache((current) => {
-      const next = { ...current };
-      entriesToLoad.forEach((entry) => {
-        const key = getVoucherDetailKey(entry);
-        if (key && !next[key]) next[key] = { loading: true };
-      });
-      return next;
-    });
-    entriesToLoad.forEach(async (entry) => {
-      const key = getVoucherDetailKey(entry);
-      if (!key) return;
-      try {
-        const kind = getVoucherDetailKind(entry);
-        const detailRequest = kind === 'supplier_invoice'
-          ? apiGet(`/admin/suppliers/${entry.supplier_id}/purchase-invoices/${entry.id}`)
-          : apiGet(`/admin/orders/${getEntryOrderId(entry)}`);
-        const timeout = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('انتهت مهلة تحميل التفاصيل')), 12000);
-        });
-        const data = await Promise.race([detailRequest, timeout]);
-        setVoucherDetailCache((current) => {
-          if (!current[key]?.loading) return current;
-          return { ...current, [key]: { loading: false, data } };
-        });
-      } catch (err) {
-        setVoucherDetailCache((current) => {
-          if (!current[key]?.loading) return current;
-          return { ...current, [key]: { loading: false, error: err.message || 'فشل تحميل التفاصيل' } };
-        });
-      }
-    });
-  }, [accountingTab, voucherUnifiedRows, voucherCollapsedDetailKeys, voucherDetailCache]);
   const filteredClientJournalClients = useMemo(() => (
     clients.filter((client) => matchesSearch(clientJournalClientSearch, [
       client.name,
@@ -1565,10 +1588,11 @@ function PurchasingAccounting({ setError, currentAdmin }) {
       nextFilters.date_to = '';
     }
     setReportFilters(nextFilters);
+    setActiveStatementView(null);
     setSupplierStatement(null);
-    setSupplierInvoice(null);
     setClientStatement(null);
     setCustomerStatement(null);
+    setTransactionDetailModal(null);
     await loadReports(nextFilters);
   };
 
@@ -1869,41 +1893,15 @@ function PurchasingAccounting({ setError, currentAdmin }) {
   const showSupplierStatement = async (supplierId) => {
     try {
       setLocalError('');
-      if (Number(supplierStatement?.supplier?.id) === Number(supplierId)) {
-        setSupplierStatement(null);
-        setSupplierInvoice(null);
-        setCollapsedStatementEntryIds([]);
-        setLinkedOrderPreview(null);
-        setLinkedOrderContextKey('');
-        return;
-      }
+      accountingListScrollRef.current = window.scrollY || 0;
       const query = buildReportQuery({ ...reportFilters, supplier_id: '', status: '' });
       const result = await apiGet(`/admin/purchasing/reports/suppliers/${supplierId}/statement${query}`);
       setSupplierStatement(result);
-      setSupplierInvoice(null);
-      setCollapsedStatementEntryIds([]);
-      setLinkedOrderPreview(null);
-      setLinkedOrderContextKey('');
+      setActiveStatementView({ type: 'supplier', key: String(supplierId) });
+      setTransactionDetailModal(null);
+      window.scrollTo({ top: 0 });
     } catch (err) {
       setLocalError(err.message || 'فشل تحميل كشف المورد');
-    }
-  };
-
-  const openSupplierInvoice = async (entry, supplierIdOverride) => {
-    const supplierId = supplierIdOverride || supplierStatement?.supplier?.id || entry?.supplier_id;
-    if (!supplierId || !entry?.id) return;
-    try {
-      setLocalError('');
-      if (Number(supplierInvoice?.invoice?.id) === Number(entry.id) && Number(supplierInvoice?.invoice?.supplier_id) === Number(supplierId)) {
-        setSupplierInvoice(null);
-        return;
-      }
-      const result = await apiGet(`/admin/suppliers/${supplierId}/purchase-invoices/${entry.id}`);
-      setSupplierInvoice(result);
-      setLinkedOrderPreview(null);
-      setLinkedOrderContextKey('');
-    } catch (err) {
-      setLocalError(err.message || 'فشل تحميل تفاصيل فاتورة الشراء');
     }
   };
 
@@ -1921,19 +1919,13 @@ function PurchasingAccounting({ setError, currentAdmin }) {
   const showClientStatement = async (clientId) => {
     try {
       setLocalError('');
-      if (Number(clientStatement?.client?.id) === Number(clientId)) {
-        setClientStatement(null);
-        setCollapsedStatementEntryIds([]);
-        setLinkedOrderPreview(null);
-        setLinkedOrderContextKey('');
-        return;
-      }
+      accountingListScrollRef.current = window.scrollY || 0;
       const query = buildReportQuery({ ...reportFilters, client_id: '', supplier_id: '', status: '' });
       const result = await apiGet(`/admin/purchasing/reports/clients/${clientId}/statement${query}`);
       setClientStatement(result);
-      setCollapsedStatementEntryIds([]);
-      setLinkedOrderPreview(null);
-      setLinkedOrderContextKey('');
+      setActiveStatementView({ type: 'client', key: String(clientId) });
+      setTransactionDetailModal(null);
+      window.scrollTo({ top: 0 });
     } catch (err) {
       setLocalError(err.message || 'فشل تحميل كشف العميل');
     }
@@ -1951,35 +1943,12 @@ function PurchasingAccounting({ setError, currentAdmin }) {
     });
   };
 
-  const openLinkedOrder = async (orderId, contextKey = '') => {
-    if (!orderId) return;
-    try {
-      setLocalError('');
-      if (isLinkedOrderOpenFor(orderId, contextKey)) {
-        setLinkedOrderPreview(null);
-        setLinkedOrderContextKey('');
-        return;
-      }
-      const result = await apiGet(`/admin/orders/${orderId}`);
-      setLinkedOrderPreview(result);
-      setLinkedOrderContextKey(contextKey);
-      setSupplierInvoice(null);
-    } catch (err) {
-      setLocalError(err.message || 'فشل تحميل تفاصيل الطلب');
-    }
-  };
-
   const showCustomerStatement = async (row) => {
     const customerKey = String(row?.customer_key || '').trim();
     if (!customerKey) return;
     try {
       setLocalError('');
-      if (customerStatement?.customer?.customer_key === customerKey) {
-        setCustomerStatement(null);
-        setLinkedOrderPreview(null);
-        setLinkedOrderContextKey('');
-        return;
-      }
+      accountingListScrollRef.current = window.scrollY || 0;
       const query = buildReportQuery({
         date_from: reportFilters.date_from,
         date_to: reportFilters.date_to,
@@ -1988,8 +1957,9 @@ function PurchasingAccounting({ setError, currentAdmin }) {
       });
       const result = await apiGet(`/admin/purchasing/reports/customers/${encodeURIComponent(customerKey)}/orders${query}`);
       setCustomerStatement({ customer: row, ...result });
-      setLinkedOrderPreview(null);
-      setLinkedOrderContextKey('');
+      setActiveStatementView({ type: 'customer', key: customerKey });
+      setTransactionDetailModal(null);
+      window.scrollTo({ top: 0 });
     } catch (err) {
       setLocalError(err.message || 'فشل تحميل كشف العميل');
     }
@@ -2003,12 +1973,11 @@ function PurchasingAccounting({ setError, currentAdmin }) {
 
   const switchAccountingTab = (tabKey) => {
     setAccountingTab(tabKey);
+    setActiveStatementView(null);
     setSupplierStatement(null);
     setClientStatement(null);
     setCustomerStatement(null);
-    setSupplierInvoice(null);
-    setLinkedOrderPreview(null);
-    setLinkedOrderContextKey('');
+    setTransactionDetailModal(null);
   };
 
   const renderAccountingTabButton = (tab) => (
@@ -2037,6 +2006,7 @@ function PurchasingAccounting({ setError, currentAdmin }) {
       {items.map(renderItem)}
     </div>
   );
+  const activeStatementData = getActiveStatementData();
 
   if (loading) return <section className="card"><p>جارٍ تحميل المشتريات والمحاسبة...</p></section>;
 
@@ -2054,8 +2024,32 @@ function PurchasingAccounting({ setError, currentAdmin }) {
           {accountingTabs.map(renderAccountingTabButton)}
         </div>
       </section>
+      {renderTransactionDetailModal()}
 
-      {accountingTab === 'suppliers' && <section className="card unified-accounting-card">
+      {activeStatementData && <section className="card accounting-statement-view">
+        <div className="card-header accounting-statement-header">
+          <div>
+            <h2>{activeStatementData.title}</h2>
+            <p className="muted">{activeStatementData.subtitle}</p>
+          </div>
+          <div className="row">
+            <button type="button" className="secondary" onClick={closeStatementView}>رجوع للقائمة</button>
+            <button type="button" onClick={activeStatementData.exportAction}>تصدير الكشف Excel</button>
+          </div>
+        </div>
+        <div className="accounting-summary-grid">
+          {activeStatementData.summary.map(([label, value, className]) => renderAccountingMetric(label, value, className))}
+        </div>
+        {activeStatementData.type === 'customer'
+          ? renderCustomerOrderRows(activeStatementData.rows, 'لا توجد طلبات لهذا العميل ضمن الفلاتر الحالية', activeStatementData.contextKey)
+          : renderStatementRows(activeStatementData.rows, 'لا توجد حركة لهذا الحساب ضمن الفترة', {
+            type: activeStatementData.type,
+            typeLabel: activeStatementData.typeLabel,
+            contextKey: activeStatementData.contextKey
+          })}
+      </section>}
+
+      {!activeStatementData && accountingTab === 'suppliers' && <section className="card unified-accounting-card">
         <div className="card-header">
           <div>
             <h2>الموردون</h2>
@@ -2151,8 +2145,6 @@ function PurchasingAccounting({ setError, currentAdmin }) {
           <tbody>
             {supplierUnifiedRows.map((row) => {
               const supplierId = row.supplier_id;
-              const isSupplierStatementOpen = Number(supplierStatement?.supplier?.id) === Number(supplierId);
-              const supplierStatementContextKey = `supplier-statement:${supplierId}`;
 
               return (
                 <React.Fragment key={supplierId}>
@@ -2166,53 +2158,12 @@ function PurchasingAccounting({ setError, currentAdmin }) {
                     {isAccountingColumnVisible('suppliers', 'payments') && <td data-label="الدفعات">{formatMoney(row.total_payments)}</td>}
                     {isAccountingColumnVisible('suppliers', 'net_movement') && <td data-label="صافي الحركة">{formatMoney(row.net_movement)}</td>}
                     {isAccountingColumnVisible('suppliers', 'balance') && <td data-label="الرصيد"><strong>{formatMoney(row.current_outstanding_balance)}</strong></td>}
-                    {isAccountingColumnVisible('suppliers', 'statement') && <td data-label="كشف الحساب" className="responsive-actions-cell"><button type="button" className="secondary mobile-icon-button" data-icon="⌕" aria-label={isSupplierStatementOpen ? 'إخفاء الكشف' : 'عرض الكشف'} title={isSupplierStatementOpen ? 'إخفاء الكشف' : 'عرض الكشف'} onClick={() => showSupplierStatement(supplierId)}>{isSupplierStatementOpen ? 'إخفاء الكشف' : 'عرض الكشف'}</button></td>}
+                    {isAccountingColumnVisible('suppliers', 'statement') && <td data-label="كشف الحساب" className="responsive-actions-cell"><button type="button" className="secondary mobile-icon-button" data-icon="⌕" aria-label="عرض الكشف" title="عرض الكشف" onClick={() => showSupplierStatement(supplierId)}>عرض الكشف</button></td>}
                     {isAccountingColumnVisible('suppliers', 'actions') && <td data-label="إجراءات" className="responsive-actions-cell">
                       {row.supplier && canUpdate && <button type="button" className="secondary mobile-icon-button" data-icon="✎" aria-label="تعديل" title="تعديل" onClick={() => editSupplier(row.supplier)}>تعديل</button>}
                       {row.supplier && canDelete && <button type="button" className="danger mobile-icon-button" data-icon="×" aria-label="حذف" title="حذف" onClick={() => deleteSupplier(supplierId)}>حذف</button>}
                     </td>}
                   </tr>
-                  {isSupplierStatementOpen && (
-                    <tr>
-                      <td colSpan={accountingColSpan('suppliers')} className="responsive-detail-cell">
-                        <div className="notice statement-panel">
-                          <div className="card-header compact">
-                            <div>
-                              <h3>كشف حساب المورد: {supplierStatement.supplier?.name}</h3>
-                              <p className="muted">الرصيد الحالي: {formatMoney(supplierStatement.supplier?.account_balance)}</p>
-                            </div>
-                            <button type="button" className="secondary" onClick={() => setSupplierStatement(null)}>إغلاق</button>
-                          </div>
-                          <div className="report-actions compact">
-                            <button type="button" onClick={() => exportSupplierStatement('xlsx')}>تصدير الكشف Excel</button>
-                          </div>
-                          {renderStatementRows(supplierStatement.rows || [], 'لا توجد حركة لهذا المورد ضمن الفترة', {
-                            typeLabel: getSupplierVoucherLabel,
-                            collapsedEntryIds: collapsedStatementEntryIds,
-                            referenceRenderer: (entry, state) => {
-                              const entryOrderId = getEntryOrderId(entry);
-                              if (state.hasItems) return <button type="button" className="link-button" onClick={() => toggleStatementEntryDetails(entry.id)}>{state.isExpanded ? 'إخفاء التفاصيل' : 'إظهار التفاصيل'}</button>;
-                              if (entryOrderId) return <button type="button" className="link-button" onClick={() => openLinkedOrder(entryOrderId, supplierStatementContextKey)}>{isLinkedOrderOpenFor(entryOrderId, supplierStatementContextKey) ? 'إخفاء التفاصيل' : (entry.reference_doc || `طلب #${entryOrderId}`)}</button>;
-                              return entry.transaction_type === 'credit' ? <button type="button" className="link-button" onClick={() => openSupplierInvoice(entry)}>{entry.reference_doc || `فاتورة #${entry.id}`}</button> : (entry.reference_doc || '-');
-                            }
-                          })}
-                          {statementHasLinkedOrder(supplierStatement.rows || [], supplierStatementContextKey) && renderLinkedOrderSection()}
-                          {supplierInvoice && Number(supplierInvoice.invoice?.supplier_id) === Number(supplierId) && (
-                            <div className="inline-statement-section">
-                              <div className="card-header compact">
-                                <div>
-                                  <h3>تفاصيل فاتورة الشراء</h3>
-                                  <p className="muted">المورد: {supplierInvoice.invoice?.supplier_name || '-'} · المرجع: {supplierInvoice.invoice?.reference_doc || '-'} · المبلغ: {formatMoney(supplierInvoice.invoice?.amount)}</p>
-                                </div>
-                                <button type="button" className="secondary" onClick={() => setSupplierInvoice(null)}>إغلاق</button>
-                              </div>
-                              {renderSupplierInvoiceRows(supplierInvoice)}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
                 </React.Fragment>
               );
             })}
@@ -2222,7 +2173,7 @@ function PurchasingAccounting({ setError, currentAdmin }) {
         </ResponsiveTableWrap>
       </section>}
 
-      {accountingTab === 'clients' && <section className="card unified-accounting-card">
+      {!activeStatementData && accountingTab === 'clients' && <section className="card unified-accounting-card">
         <div className="card-header">
           <div>
             <h2>العملاء</h2>
@@ -2318,14 +2269,7 @@ function PurchasingAccounting({ setError, currentAdmin }) {
           <thead><tr>{visibleAccountingColumns('clients').map((column) => <th key={column.key} className={column.key === 'client' ? 'client-name-column' : undefined}>{column.label}</th>)}</tr></thead>
           <tbody>
             {clientUnifiedRows.map((row) => {
-              const activeClientStatement = clientStatement?.client ? clientStatement : null;
-              const activeCustomerStatement = customerStatement?.customer ? customerStatement : null;
-              const isClientStatementOpen = !!row.client_id && Number(activeClientStatement?.client?.id) === Number(row.client_id);
-              const isCustomerStatementOpen = !!row.customer_key && activeCustomerStatement?.customer?.customer_key === row.customer_key;
-              const clientStatementContextKey = `client-statement:${row.key}`;
-              const customerStatementContextKey = `customer-statement:${row.key}`;
               const statementMode = row.client_id ? 'manual' : (row.customer_key ? 'store' : '');
-              const isUnifiedStatementOpen = statementMode === 'manual' ? isClientStatementOpen : isCustomerStatementOpen;
               const openUnifiedStatement = () => {
                 if (statementMode === 'manual') {
                   showClientStatement(row.client_id);
@@ -2352,7 +2296,7 @@ function PurchasingAccounting({ setError, currentAdmin }) {
                   {isAccountingColumnVisible('clients', 'balance') && <td data-label="الرصيد">{row.type === 'manual' || row.type === 'mixed' ? <strong>{formatMoney(row.current_outstanding_balance)}</strong> : '-'}</td>}
                   {isAccountingColumnVisible('clients', 'last_order') && <td data-label="آخر طلب">{String(row.last_order_at || '').slice(0, 10) || '-'}</td>}
                   {isAccountingColumnVisible('clients', 'statement') && <td data-label="كشف/تحميل" className="responsive-actions-cell">
-                    {statementMode && <button type="button" className="secondary mobile-icon-button" data-icon="⌕" aria-label={isUnifiedStatementOpen ? 'إخفاء الكشف' : 'عرض الكشف'} title={isUnifiedStatementOpen ? 'إخفاء الكشف' : 'عرض الكشف'} onClick={openUnifiedStatement}>{isUnifiedStatementOpen ? 'إخفاء الكشف' : 'عرض الكشف'}</button>}
+                    {statementMode && <button type="button" className="secondary mobile-icon-button" data-icon="⌕" aria-label="عرض الكشف" title="عرض الكشف" onClick={openUnifiedStatement}>عرض الكشف</button>}
                     {row.customer_key && <button type="button" className="mobile-icon-button" data-icon="XLS" aria-label="تصدير Excel" title="تصدير Excel" onClick={() => downloadReport(`/admin/purchasing/reports/customers/${encodeURIComponent(row.customer_key)}/orders/export`, 'xlsx', { date_from: reportFilters.date_from, date_to: reportFilters.date_to, supplier_id: '', status: 'delivered' })}>Excel</button>}
                   </td>}
                   {isAccountingColumnVisible('clients', 'actions') && <td data-label="إجراءات" className="responsive-actions-cell">
@@ -2360,51 +2304,6 @@ function PurchasingAccounting({ setError, currentAdmin }) {
                     {row.client && canDelete && <button type="button" className="danger mobile-icon-button" data-icon="×" aria-label="حذف" title="حذف" onClick={() => deleteClient(row.client_id)}>حذف</button>}
                   </td>}
                 </tr>
-                {isClientStatementOpen && (
-                  <tr>
-                    <td colSpan={accountingColSpan('clients')} className="responsive-detail-cell">
-                      <div className="notice statement-panel">
-                        <div className="card-header compact">
-                          <div>
-                            <h3>كشف حساب العميل: {activeClientStatement.client?.name || '-'}</h3>
-                            <p className="muted">الرصيد الحالي: {formatMoney(activeClientStatement.client?.account_balance)}</p>
-                          </div>
-                          <button type="button" className="secondary" onClick={() => setClientStatement(null)}>إغلاق</button>
-                        </div>
-                        <div className="report-actions compact">
-                          <button type="button" onClick={() => exportClientStatement('xlsx')}>تصدير الكشف Excel</button>
-                        </div>
-                        {renderStatementRows(activeClientStatement.rows || [], 'لا توجد حركة لهذا العميل ضمن الفترة', {
-                          typeLabel: getClientVoucherLabel,
-                          collapsedEntryIds: collapsedStatementEntryIds,
-                          referenceRenderer: (entry, state) => {
-                            const entryOrderId = getEntryOrderId(entry);
-                            if (state.hasItems) return <button type="button" className="link-button" onClick={() => toggleStatementEntryDetails(entry.id)}>{state.isExpanded ? 'إخفاء التفاصيل' : 'إظهار التفاصيل'}</button>;
-                            return entryOrderId ? <button type="button" className="link-button" onClick={() => openLinkedOrder(entryOrderId, clientStatementContextKey)}>{isLinkedOrderOpenFor(entryOrderId, clientStatementContextKey) ? 'إخفاء التفاصيل' : (entry.reference_doc || `طلب #${entryOrderId}`)}</button> : (entry.reference_doc || '-');
-                          }
-                        })}
-                        {statementHasLinkedOrder(activeClientStatement.rows || [], clientStatementContextKey) && renderLinkedOrderSection()}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                {isCustomerStatementOpen && (
-                  <tr>
-                    <td colSpan={accountingColSpan('clients')} className="responsive-detail-cell">
-                      <div className="notice statement-panel">
-                        <div className="card-header compact">
-                          <div>
-                            <h3>كشف حساب العميل: {activeCustomerStatement.customer?.customer_name || '-'}</h3>
-                            <p className="muted">عدد الطلبات: {activeCustomerStatement.summary?.orders_count || 0} · عدد القطع: {activeCustomerStatement.summary?.items_quantity || 0} · الخصم: {formatMoney(activeCustomerStatement.summary?.discount_amount)} · الصافي: {formatMoney(activeCustomerStatement.summary?.total)}</p>
-                          </div>
-                          <button type="button" className="secondary" onClick={() => setCustomerStatement(null)}>إغلاق</button>
-                        </div>
-                        {renderCustomerOrderRows(activeCustomerStatement.rows || [], 'لا توجد طلبات لهذا العميل ضمن الفلاتر الحالية', customerStatementContextKey)}
-                        {statementHasLinkedOrder(activeCustomerStatement.rows || [], customerStatementContextKey) && renderLinkedOrderSection()}
-                      </div>
-                    </td>
-                  </tr>
-                )}
               </React.Fragment>
               );
             })}
@@ -2414,7 +2313,7 @@ function PurchasingAccounting({ setError, currentAdmin }) {
         </ResponsiveTableWrap>
       </section>}
 
-      {accountingTab === 'vouchers' && <section className="card unified-accounting-card">
+      {!activeStatementData && accountingTab === 'vouchers' && <section className="card unified-accounting-card">
         <div className="card-header">
           <div>
             <h2>السندات</h2>
@@ -2638,12 +2537,8 @@ function PurchasingAccounting({ setError, currentAdmin }) {
             <thead><tr>{visibleAccountingColumns('vouchers').map((column) => <th key={column.key}>{column.label}</th>)}</tr></thead>
             <tbody>
               {voucherUnifiedRows.map((entry) => {
-                const voucherContextKey = `voucher:${entry.key}`;
-                const voucherDetailKind = getVoucherDetailKind(entry);
                 const voucherDetailKey = getVoucherDetailKey(entry);
                 const entryOrderId = getEntryOrderId(entry);
-                const isVoucherDetailOpen = Boolean(voucherDetailKey) && !voucherCollapsedDetailKeys.includes(voucherDetailKey);
-                const voucherDetailState = voucherDetailCache[voucherDetailKey] || {};
                 return (
                   <React.Fragment key={entry.key}>
                     <tr>
@@ -2655,41 +2550,10 @@ function PurchasingAccounting({ setError, currentAdmin }) {
                       {isAccountingColumnVisible('vouchers', 'total_sales') && <td data-label="إجمالي البيع">{formatOrderMetric(entry, 'total_sales')}</td>}
                       {isAccountingColumnVisible('vouchers', 'purchase_total') && <td data-label="إجمالي الشراء">{formatOrderMetric(entry, 'purchase_total')}</td>}
                       {isAccountingColumnVisible('vouchers', 'net_profit') && <td data-label="صافي الربح">{formatOrderMetric(entry, 'net_profit')}</td>}
-                      {isAccountingColumnVisible('vouchers', 'reference') && <td data-label="المرجع">{voucherDetailKey ? <button type="button" className="link-button" onClick={() => toggleVoucherDetail(entry)}>{isVoucherDetailOpen ? 'إخفاء التفاصيل' : 'إظهار التفاصيل'}</button> : (entry.reference_doc || '-')}</td>}
+                      {isAccountingColumnVisible('vouchers', 'reference') && <td data-label="المرجع">{entry.reference_doc || '-'}</td>}
                       {isAccountingColumnVisible('vouchers', 'note') && <td data-label="ملاحظة">{entry.note || '-'}</td>}
-                      {isAccountingColumnVisible('vouchers', 'order') && <td data-label="الطلب">{entryOrderId ? <button type="button" className="link-button" onClick={() => toggleVoucherDetail(entry)}>{isVoucherDetailOpen ? 'إخفاء' : `#${entryOrderId}`}</button> : '-'}</td>}
+                      {isAccountingColumnVisible('vouchers', 'order') && <td data-label="الطلب">{voucherDetailKey ? <button type="button" className="link-button" onClick={() => toggleVoucherDetail(entry)}>{entryOrderId ? `#${entryOrderId}` : 'التفاصيل'}</button> : '-'}</td>}
                     </tr>
-                    {isVoucherDetailOpen && (
-                      <tr>
-                        <td colSpan={accountingColSpan('vouchers')} className="responsive-detail-cell">
-                          <div className="notice statement-panel">
-                            {voucherDetailState.loading && <p className="muted">جارٍ تحميل التفاصيل...</p>}
-                            {voucherDetailState.error && (
-                              <div className="inline-status-row">
-                                <p className="error">{voucherDetailState.error}</p>
-                                <button type="button" className="secondary" onClick={() => retryVoucherDetail(entry)}>إعادة المحاولة</button>
-                              </div>
-                            )}
-                            {!voucherDetailState.loading && !voucherDetailState.error && !voucherDetailState.data && <p className="muted">بانتظار تحميل التفاصيل...</p>}
-                            {!voucherDetailState.loading && !voucherDetailState.error && voucherDetailState.data && (
-                              voucherDetailKind === 'supplier_invoice'
-                                ? (
-                                  <>
-                                    <div className="card-header compact">
-                                      <div>
-                                        <h3>تفاصيل فاتورة الشراء</h3>
-                                        <p className="muted">المورد: {voucherDetailState.data.invoice?.supplier_name || '-'} · المرجع: {voucherDetailState.data.invoice?.reference_doc || '-'} · المبلغ: {formatMoney(voucherDetailState.data.invoice?.amount)}</p>
-                                      </div>
-                                    </div>
-                                    {renderSupplierInvoiceRows(voucherDetailState.data)}
-                                  </>
-                                )
-                                : renderLinkedOrderRows(voucherDetailState.data)
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
                   </React.Fragment>
                 );
               })}

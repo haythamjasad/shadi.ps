@@ -20,6 +20,8 @@ build/
 .next/
 out/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
 
 # Logs

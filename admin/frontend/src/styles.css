@@ -294,6 +294,137 @@ button.secondary { background: #e5e7eb; color: #111827; border: 1px solid #d1d5d
 .kpi-card span { display: block; color: #64748b; font-size: 12px; margin-bottom: 8px; }
 .kpi-card strong { display: block; color: #0f172a; font-size: 22px; }
 .statement-panel { background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; }
+.accounting-statement-view {
+  gap: 16px;
+  border-color: #dbe3ee;
+  background: #ffffff;
+}
+.accounting-statement-header {
+  align-items: flex-start;
+  gap: 14px;
+}
+.accounting-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.statement-ledger-list,
+.statement-detail-list { display: grid; gap: 10px; }
+.statement-ledger-entry,
+.statement-detail-card {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #dbe3ee;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.statement-ledger-head,
+.statement-detail-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.statement-ledger-title,
+.statement-detail-title strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.statement-ledger-title strong,
+.statement-detail-title strong {
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+.statement-ledger-subtitle,
+.statement-detail-title span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.statement-ledger-reference {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 120px;
+  color: #334155;
+  text-align: left;
+}
+.statement-ledger-metrics,
+.statement-detail-metrics,
+.statement-item-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+.accounting-metric {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.accounting-metric span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+.accounting-metric strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.accounting-metric.debit { background: #fff7ed; border-color: #fed7aa; }
+.accounting-metric.credit { background: #eff6ff; border-color: #bfdbfe; }
+.accounting-metric.balance { background: #eef6ff; border-color: #bfdbfe; }
+.statement-ledger-note {
+  margin: 0;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  overflow-wrap: anywhere;
+}
+.statement-item-card {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.4fr) repeat(4, minmax(90px, 1fr));
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid #fed7aa;
+  border-inline-start: 4px solid #f89c1c;
+  border-radius: 8px;
+  background: #fffaf2;
+}
+.statement-item-card span {
+  display: block;
+  margin-bottom: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+.statement-item-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.statement-detail-card.compact { gap: 10px; }
+.accounting-detail-modal {
+  width: min(920px, calc(100vw - 28px));
+  max-height: min(760px, calc(100vh - 28px));
+  overflow: auto;
+}
+.accounting-detail-body {
+  display: grid;
+  gap: 12px;
+}
 .link-button { border: 0; background: transparent; color: #2563eb; padding: 0; font: inherit; text-decoration: underline; cursor: pointer; }
 .link-button:hover { color: #1d4ed8; }
 
@@ -335,6 +466,22 @@ button.secondary { background: #e5e7eb; color: #111827; border: 1px solid #d1d5d
     color: #64748b;
     font-weight: 800;
     text-align: right;
+  }
+  .statement-ledger-head,
+  .statement-detail-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .statement-ledger-reference {
+    justify-content: flex-start;
+    min-width: 0;
+    text-align: right;
+  }
+  .statement-ledger-metrics,
+  .statement-detail-metrics,
+  .statement-item-cards,
+  .statement-item-card {
+    grid-template-columns: 1fr;
   }
 }
 
