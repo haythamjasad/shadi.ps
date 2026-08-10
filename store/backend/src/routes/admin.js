@@ -138,7 +138,11 @@ async function ensureAdminIdempotencyTable() {
   await adminIdempotencyTableReady;
 }
 
-function adminIdempotency(routeKey) {
+export function __resetAdminIdempotencyForTests() {
+  adminIdempotencyTableReady = null;
+}
+
+export function adminIdempotency(routeKey) {
   return async (req, res, next) => {
     const idempotencyKey = String(req.get('Idempotency-Key') || '').trim();
     if (!idempotencyKey) return next();
@@ -194,7 +198,9 @@ function adminIdempotency(routeKey) {
             WHERE admin_scope = ?
               AND idempotency_key = ?`,
           [statusCode, JSON.stringify(body ?? null), adminScope, idempotencyKey]
-        ).catch(() => {});
+        ).catch((err) => {
+          console.error('Failed to persist admin idempotency response', err);
+        });
         return originalJson(body);
       };
 
@@ -2218,7 +2224,7 @@ async function reverseSupplierDeliveryVouchers(conn, orderId) {
   return entries.length;
 }
 
-async function syncSupplierDeliveryVouchersForOrder(conn, orderId, date) {
+export async function syncSupplierDeliveryVouchersForOrder(conn, orderId, date) {
   const orderSelectFields = await getOrderSelectFields();
   const [orders] = await conn.query(
     `SELECT ${orderSelectFields}
@@ -2307,7 +2313,7 @@ async function reverseClientDeliveryVoucher(conn, orderId) {
   return entries.length;
 }
 
-async function syncClientDeliveryVoucherForOrder(conn, orderId, date) {
+export async function syncClientDeliveryVoucherForOrder(conn, orderId, date) {
   const orderSelectFields = await getOrderSelectFields();
   const [orders] = await conn.query(
     `SELECT ${orderSelectFields}
@@ -2420,7 +2426,7 @@ export async function createDeliveredOrderAccounting(conn, orderId, date, option
   };
 }
 
-async function reverseOrderAccounting(conn, orderId) {
+export async function reverseOrderAccounting(conn, orderId) {
   const reversed = { supplier_entries: 0, client_entries: 0 };
 
   const [supplierEntries] = await conn.query(

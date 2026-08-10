@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import pool from '../src/db.js';
 import {
   createDeliveredOrderAccounting,
-  ensureStoreOrderClientForAccounting
+  ensureStoreOrderClientForAccounting,
+  reverseOrderAccounting,
+  syncClientDeliveryVoucherForOrder,
+  syncSupplierDeliveryVouchersForOrder
 } from '../src/routes/admin.js';
 
 function stubSchemaColumns() {
@@ -378,4 +381,133 @@ test('createDeliveredOrderAccounting moves existing wrong client journals to the
   } finally {
     restorePool();
   }
+});
+
+test('syncClientDeliveryVoucherForOrder updates existing delivery voucher and applies only balance delta', async () => {
+  const restorePool = stubSchemaColumns();
+  const calls = [];
+  const order = {
+    id: 301,
+    client_id: 44,
+    supplier_buyer_id: null,
+    status: 'delivered',
+    delivery_fee_amount: 95,
+    delivery_payer: 'customer',
+    delivery_note: 'توصيل للزبون'
+  };
+
+  const conn = {
+    async query(sql, params) {
+      calls.push({ sql, params });
+      const statement = String(sql);
+      if (statement.includes('FROM orders')) return [[order]];
+      if (statement.includes('FROM client_journal_entries') && statement.includes('LIMIT 1')) {
+        return [[{ id: 7001, amount: 75 }]];
+      }
+      if (statement.includes('UPDATE client_journal_entries')) return [{ affectedRows: 1 }];
+      if (statement.includes('UPDATE clients SET account_balance')) return [{ affectedRows: 1 }];
+      throw new Error(`Unexpected query: ${statement}`);
+    }
+  };
+
+  try {
+    const result = await syncClientDeliveryVoucherForOrder(conn, 301, '2026-08-10');
+
+    assert.equal(result.created, null);
+    assert.equal(result.skipped.existing_entry_id, 7001);
+    assert.equal(calls.filter((call) => String(call.sql).includes('INSERT INTO client_journal_entries')).length, 0);
+    assert.deepEqual(
+      calls.find((call) => String(call.sql).includes('UPDATE clients SET account_balance'))?.params,
+      [20, 44]
+    );
+  } finally {
+    restorePool();
+  }
+});
+
+test('syncSupplierDeliveryVouchersForOrder reverses old supplier delivery voucher before creating current one', async () => {
+  const restorePool = stubSchemaColumns();
+  const calls = [];
+  const order = {
+    id: 302,
+    status: 'delivered',
+    delivery_fee_amount: 40,
+    delivery_payer: 'supplier',
+    delivery_note: ''
+  };
+
+  const conn = {
+    async query(sql, params) {
+      calls.push({ sql, params });
+      const statement = String(sql);
+      if (statement.includes('FROM orders')) return [[order]];
+      if (statement.includes('FROM journal_entries') && statement.includes('FOR UPDATE')) {
+        return [[{ id: 801, supplier_id: 9, amount: 10 }]];
+      }
+      if (statement.includes('DELETE FROM journal_entries')) return [{ affectedRows: 1 }];
+      if (statement.includes('FROM order_supplier_deliveries')) {
+        return [[{ id: 1, order_id: 302, supplier_id: 9, supplier_name: 'مورد', amount: 40, note: 'نقل' }]];
+      }
+      if (statement.includes('SELECT id, name FROM suppliers')) return [[{ id: 9, name: 'مورد' }]];
+      if (statement.includes('INSERT INTO journal_entries')) return [{ insertId: 802 }];
+      if (statement.includes('UPDATE suppliers SET account_balance')) return [{ affectedRows: 1 }];
+      throw new Error(`Unexpected query: ${statement}`);
+    }
+  };
+
+  try {
+    const result = await syncSupplierDeliveryVouchersForOrder(conn, 302, '2026-08-10');
+
+    assert.equal(result.reversed, 1);
+    assert.equal(result.created.length, 1);
+    assert.equal(calls.filter((call) => String(call.sql).includes('INSERT INTO journal_entries')).length, 1);
+    assert.deepEqual(
+      calls.filter((call) => String(call.sql).includes('UPDATE suppliers SET account_balance')).map((call) => call.params),
+      [[10, 9], [40, 9]]
+    );
+  } finally {
+    restorePool();
+  }
+});
+
+test('reverseOrderAccounting restores supplier and client balances without deleting manual client credits', async () => {
+  const calls = [];
+  const conn = {
+    async query(sql, params) {
+      calls.push({ sql, params });
+      const statement = String(sql);
+      if (statement.includes('FROM journal_entries')) {
+        return [[
+          { id: 1, supplier_id: 5, transaction_type: 'credit', amount: 160 },
+          { id: 2, supplier_id: 6, transaction_type: 'debit', amount: 25 }
+        ]];
+      }
+      if (statement.includes('FROM client_journal_entries')) {
+        return [[
+          { id: 3, client_id: 8, transaction_type: 'debit', amount: 300, note: 'فاتورة بيع طلب مسلم' },
+          { id: 4, client_id: 8, transaction_type: 'credit', amount: 300, note: 'دفعة تلقائية عند التسليم والدفع' },
+          { id: 5, client_id: 8, transaction_type: 'credit', amount: 50, note: 'دفعة يدوية' }
+        ]];
+      }
+      if (statement.includes('UPDATE suppliers SET account_balance')) return [{ affectedRows: 1 }];
+      if (statement.includes('UPDATE clients SET account_balance')) return [{ affectedRows: 1 }];
+      if (statement.includes('DELETE FROM journal_entries')) return [{ affectedRows: 2 }];
+      if (statement.includes('DELETE FROM client_journal_entries')) return [{ affectedRows: 1 }];
+      if (statement.includes('UPDATE client_journal_entries SET order_id = NULL')) return [{ affectedRows: 1 }];
+      throw new Error(`Unexpected query: ${statement}`);
+    }
+  };
+
+  const result = await reverseOrderAccounting(conn, 303);
+
+  assert.deepEqual(result, { supplier_entries: 2, client_entries: 3 });
+  assert.deepEqual(
+    calls.filter((call) => String(call.sql).includes('UPDATE suppliers SET account_balance')).map((call) => call.params),
+    [[-160, 5], [25, 6]]
+  );
+  assert.deepEqual(
+    calls.filter((call) => String(call.sql).includes('UPDATE clients SET account_balance')).map((call) => call.params),
+    [[300, 8], [300, 8]]
+  );
+  assert.ok(calls.some((call) => String(call.sql).includes('UPDATE client_journal_entries SET order_id = NULL')));
 });

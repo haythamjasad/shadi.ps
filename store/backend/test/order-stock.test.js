@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { reserveStockForItems } from '../src/utils/order.js';
+import { releaseStockForItems, reserveStockForItems } from '../src/utils/order.js';
 
 test('reserveStockForItems does not query or update stock for duplicate product rows', async () => {
   const calls = [];
@@ -36,4 +36,24 @@ test('reserveStockForItems succeeds even when stored stock would be empty', asyn
   ]);
 
   assert.equal(queried, false);
+});
+
+test('reserve and release stock helpers perform no stock mutations during status changes', async () => {
+  const calls = [];
+  const conn = {
+    async query(sql, params) {
+      calls.push({ sql, params });
+      return [{ affectedRows: 1 }];
+    }
+  };
+
+  const items = [
+    { productId: 15, quantity: 2 },
+    { product_id: 16, quantity: 3 }
+  ];
+
+  await reserveStockForItems(conn, items);
+  await releaseStockForItems(conn, items);
+
+  assert.deepEqual(calls, []);
 });
