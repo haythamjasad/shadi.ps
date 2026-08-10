@@ -26,7 +26,7 @@ router.post(
 router.get("/open", requireAdminPermission('shadi_transactions', 'read_list'), TransactionController.findAllOpen);
 
 // GET /api/v0/transactions/new
-router.get("/new", requireAdminPermission('shadi_transactions', 'read_list'), TransactionController.findAllNew);
+router.get("/new", requireAdminPermission('shadi_transactions', 'read_unpaid'), TransactionController.findAllNew);
 
 // GET /api/v0/transactions/closed
 router.get("/closed", requireAdminPermission('shadi_transactions', 'read_list'), TransactionController.findAllClosed);

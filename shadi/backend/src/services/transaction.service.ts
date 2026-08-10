@@ -20,6 +20,19 @@ export interface TransactionFilters {
 }
 
 export class TransactionService {
+  private static readonly SORT_FIELDS: Readonly<Record<string, string>> = {
+    id: 'id',
+    name: 'name',
+    phone: 'phone',
+    status: 'status',
+    location: 'location',
+    cost: 'cost',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    transactionDate: 'transactionDate',
+    transactionAmount: 'transactionAmount',
+  };
+
   static prepareCreateData(data: Partial<Transaction>): Partial<Transaction> {
     const serviceTypes = Array.isArray(data.serviceType)
       ? data.serviceType
@@ -47,7 +60,7 @@ export class TransactionService {
         cost += data.cost ? data.cost : 0;
       } else {
         if (sanitizedData.location === Location.ZOOM) {
-          cost += 50;
+          cost += 60;
         } else {
           cost += 100;
         }
@@ -171,7 +184,7 @@ export class TransactionService {
     }
 
     // Apply sorting
-    const sortField = pagination.sort || 'createdAt';
+    const sortField = TransactionService.SORT_FIELDS[pagination.sort || ''] || 'createdAt';
     const sortOrder = pagination.order || 'DESC';
     queryBuilder.orderBy(`transaction.${sortField}`, sortOrder);
 

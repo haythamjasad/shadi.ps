@@ -9,7 +9,8 @@
     "build": "rm -rf dist && esbuild src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.js && node -e \"require('fs').writeFileSync('dist/package.json', JSON.stringify({type:'commonjs'}))\"",
     "test": "node --test",
     "migrate:product-docs": "node scripts/migrate-legacy-product-docs.js",
-    "backfill:admin-permissions": "node scripts/backfill-admin-permissions.js"
+    "backfill:admin-permissions": "node scripts/backfill-admin-permissions.js",
+    "repair:order-clients": "node scripts/repair-order-client-links.js"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
@@ -20,6 +21,7 @@
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.0",
     "nodemailer": "^6.9.14",
+    "pdfkit": "^0.18.0",
     "xlsx": "^0.18.5",
     "zod": "^3.24.1"
   },

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <title>شعرة</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='sharah.css') }}?v=20260527-footer-prod-fix1" />
+    <link rel="stylesheet" href="{{ request.url_for('static', path='shadi-nav.css') }}?v=20260609-shara-logo-nav2" />
+  </head>
+  <body>
+    <nav class="shadiCloneNavbar" dir="ltr" aria-label="روابط شادي السريعة">
+      <div class="shadiCloneToolbar">
+        <div class="shadiCloneDesktopButtons" aria-label="روابط سريعة">
+          <a class="shadiCloneDesktopPill" href="https://www.shadi.ps/consulting#appointment_form" target="_blank" rel="noopener noreferrer" aria-label="إستشارة">
+            <img src="{{ request.url_for('images', path='consulting-nav-label-new-CV5EmEK3.png') }}" alt="إستشارة" />
+          </a>
+          <a class="shadiCloneDesktopPill" href="https://store.shadi.ps" target="_blank" rel="noopener noreferrer" aria-label="المتجر">
+            <img src="{{ request.url_for('images', path='store-nav-label-new.png') }}" alt="المتجر" />
+          </a>
+          <a class="shadiCloneDesktopPill" href="https://shadi.ps" target="_blank" rel="noopener noreferrer" aria-label="الرئيسية">
+            <img src="{{ request.url_for('images', path='Shadi.png') }}" alt="الرئيسية" />
+          </a>
+        </div>
+
+        <a class="shadiCloneDesktopLogo" href="/" aria-label="شعرة">
+          <img src="{{ request.url_for('images', path='circle_logo_footer.png') }}" alt="شعار شادي" />
+        </a>
+
+        <div class="shadiCloneMobileBar">
+          <div class="shadiCloneMobileLinks" aria-label="روابط سريعة">
+            <a class="shadiCloneMobileLink" href="https://www.shadi.ps/consulting#appointment_form" target="_blank" rel="noopener noreferrer" aria-label="إستشارة">
+              <img src="{{ request.url_for('images', path='consulting-nav-label-new-CV5EmEK3.png') }}" alt="إستشارة" />
+            </a>
+            <span class="shadiCloneMobileDivider" aria-hidden="true"></span>
+            <a class="shadiCloneMobileLink" href="https://store.shadi.ps" target="_blank" rel="noopener noreferrer" aria-label="المتجر">
+              <img src="{{ request.url_for('images', path='store-nav-label-new.png') }}" alt="المتجر" />
+            </a>
+            <span class="shadiCloneMobileDivider" aria-hidden="true"></span>
+            <a class="shadiCloneMobileLink" href="https://shadi.ps" target="_blank" rel="noopener noreferrer" aria-label="الرئيسية">
+              <img src="{{ request.url_for('images', path='Shadi.png') }}" alt="الرئيسية" />
+            </a>
+          </div>
+          <a class="shadiCloneMobileEndLogo" href="/" aria-label="شعرة">
+            <img
+              src="{{ request.url_for('images', path='circle_logo_footer.png') }}"
+              width="50"
+              height="50"
+              style="display:block;width:50px;height:50px;max-width:50px;max-height:50px;border-radius:50%;object-fit:cover;"
+              alt=""
+              aria-hidden="true"
+            />
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="page">
+      <section class="heroBanner" aria-label="شعرة">
+        <img id="sharaHeroBanner" src="{{ request.url_for('images', path='shara-banner.jpeg') }}?v=20260524-banner2" alt="شعرة" />
+      </section>
+
+      <section class="toolbar" aria-label="الفلاتر">
+        <div class="toolbarRow">
+          <div class="field searchField">
+            <label class="searchInFilters" aria-label="البحث">
+              <button id="clearSearch" type="button" class="clearSearch" aria-label="بحث">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2" />
+                  <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </button>
+              <input id="q" type="search" placeholder="ابحث بالوسوم..." autocomplete="off" />
+              <span class="searchIcon" aria-hidden="true">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                  <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </span>
+            </label>
+          </div>
+
+          <div class="platformPills" role="group" aria-label="المنصة">
+            <button type="button" class="platformPill countPill" data-platform="facebook" aria-label="Facebook" aria-pressed="true">
+              <span class="pillCount" id="facebookCount">0</span>
+              <span>فيسبوك</span>
+              <img class="pillIcon" src="{{ request.url_for('images', path='facebook-platform.png') }}" alt="" aria-hidden="true" loading="lazy" />
+            </button>
+            <button type="button" class="platformPill countPill" data-platform="tiktok" aria-label="TikTok" aria-pressed="false" hidden>
+              <span class="pillCount" id="tiktokCount">0</span>
+              <span>تيك توك</span>
+              <img class="pillIcon" src="{{ request.url_for('images', path='tiktok-platform.png') }}" alt="" aria-hidden="true" loading="lazy" />
+            </button>
+          </div>
+
+          <div class="searchMetaLine" id="searchMetaLine">عرض 0 من 0 فيديو</div>
+
+          <div class="suggestions" id="suggestions" aria-label="اقتراحات شائعة">
+            <span>شائع:</span>
+          </div>
+
+          <select id="sortSelect" class="nativeSelect visuallyHidden" aria-label="الترتيب">
+            <option value="new">الأحدث</option>
+            <option value="old">الأقدم</option>
+            <option value="popular">الأكثر شهرة</option>
+          </select>
+        </div>
+
+      </section>
+
+      <section class="results" aria-label="النتائج">
+        <div class="meta">
+          <div class="count" id="count">عرض 0 فيديو</div>
+        </div>
+
+        <div class="grid" id="grid" aria-live="polite"></div>
+
+        <nav class="pager" id="pager" aria-label="الصفحات">
+          <button class="pageBtn" type="button" id="prevPage" aria-label="السابق">‹</button>
+          <div class="pages" id="pages"></div>
+          <button class="pageBtn" type="button" id="nextPage" aria-label="التالي">›</button>
+        </nav>
+      </section>
+    </main>
+
+    <footer class="siteFooter" aria-label="تذييل الصفحة">
+      <div class="siteFooterInner">
+        <div class="mobileAccentOrange" aria-hidden="true"></div>
+        <div class="mobileAccentDark" aria-hidden="true"></div>
+        <div class="mobileCorner" aria-hidden="true"></div>
+        <div class="desktopAccentOrange" aria-hidden="true"></div>
+        <div class="desktopAccentDark" aria-hidden="true"></div>
+        <div class="desktopCorner" aria-hidden="true"></div>
+
+        <div class="desktopLogoBadge">
+          <img src="{{ request.url_for('images', path='circle_logo_footer.png') }}" alt="شعار شادي شرّي" class="footerLogo" />
+        </div>
+
+        <div class="footerSpacer">
+          <div class="mobileTopRow" dir="ltr">
+            <div class="mobileFooterContent">
+              <div class="mobileSocialRow" aria-label="روابط التواصل">
+                <a href="https://www.facebook.com/share/1Fgc18pkRL/" target="_blank" rel="noreferrer" class="social fb" aria-label="Facebook">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8.6V6.8c0-.9.3-1.4 1.5-1.4H17V2.2c-.7-.1-1.5-.2-2.3-.2-2.8 0-4.7 1.7-4.7 4.8v1.8H7v3.6h3V22h3.8v-9.8h3l.5-3.6H14Z" /></svg>
+                </a>
+                <a href="https://www.instagram.com/shadi_shirri/" target="_blank" rel="noreferrer" class="social ig" aria-label="Instagram">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm8.7 2.1a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 2a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8Z" /></svg>
+                </a>
+                <a href="https://www.tiktok.com/@shadishirri?_r=1&_t=ZS-91y8i3OcOJh" target="_blank" rel="noreferrer" class="social tt" aria-label="TikTok">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2c.3 2.5 1.7 4 4.1 4.2v3.4a7.2 7.2 0 0 1-4.1-1.3v6.7c0 4.3-2.7 7-6.6 7-3.5 0-6.3-2.6-6.3-6.1 0-4 3.2-6.5 7.4-6.1v3.6c-2.1-.3-3.7.6-3.7 2.4 0 1.4 1.1 2.5 2.6 2.5 1.6 0 2.8-.9 2.8-3.3V2h3.8Z" /></svg>
+                </a>
+                <a href="https://wa.me/+972568114114" target="_blank" rel="noreferrer" class="social wa" aria-label="WhatsApp">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a9.8 9.8 0 0 1 8.4 14.9L21.7 22l-5.2-1.3A9.8 9.8 0 0 1 2.2 12 9.8 9.8 0 0 1 12 2Zm0 2a7.8 7.8 0 0 0-6.6 12l.3.5-.7 2.6 2.7-.7.5.3A7.8 7.8 0 1 0 12 4Zm-3 3.9c.2 0 .4 0 .6.4l.8 1.9c.1.3 0 .5-.1.7l-.5.6c-.2.2-.2.3 0 .6.4.7 1 1.5 1.7 2.1.8.7 1.5 1 2.3 1.3.3.1.5.1.7-.1l.8-1c.2-.3.5-.3.8-.2l1.8.9c.3.2.5.3.5.5 0 .5-.3 1.4-.8 1.8-.5.5-1.4.7-2.4.5-2-.4-4-1.5-5.6-3.1-1.5-1.5-2.7-3.3-3.1-5.3-.2-.9 0-1.8.5-2.4.4-.5 1.2-.8 1.6-.8Z" /></svg>
+                </a>
+                <a href="mailto:info@shadi.ps" class="social em" aria-label="Email">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm1.7 2 7.3 5 7.3-5H4.7ZM20 17V8.9l-7.4 5.1a1 1 0 0 1-1.2 0L4 8.9V17h16Z" /></svg>
+                </a>
+                <img src="/images/visa.png" alt="Visa" class="mobileCardIcon" loading="lazy" />
+                <img src="/images/mastercard.png" alt="MasterCard" class="mobileCardIcon" loading="lazy" />
+              </div>
+              <div class="mobileRightsText" dir="rtl">
+                جميع الحقوق محفوظة © شركة شادي شري للهندسة والاستشارات 2026 |
+                <a class="footerPolicy" href="/terms-and-policies">اقرأ الشروط والسياسات</a>
+              </div>
+            </div>
+            <div class="mobileLogoBadge">
+              <img src="{{ request.url_for('images', path='circle_logo_footer.png') }}" alt="شعار شادي شرّي" class="footerLogo" />
+            </div>
+          </div>
+        </div>
+
+        <div class="footerContent">
+          <div class="desktopContent" dir="rtl">
+            <div class="footerCompany">شركة شادي شري للهندسة والاستشارات</div>
+            <div class="footerMetaRow" dir="ltr">
+              <div class="footerSocial" aria-label="روابط التواصل">
+                <a href="https://www.facebook.com/share/1Fgc18pkRL/" target="_blank" rel="noreferrer" class="social fb" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8.6V6.8c0-.9.3-1.4 1.5-1.4H17V2.2c-.7-.1-1.5-.2-2.3-.2-2.8 0-4.7 1.7-4.7 4.8v1.8H7v3.6h3V22h3.8v-9.8h3l.5-3.6H14Z" /></svg></a>
+                <a href="https://www.instagram.com/shadi_shirri/" target="_blank" rel="noreferrer" class="social ig" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm8.7 2.1a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 2a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8Z" /></svg></a>
+                <a href="https://www.tiktok.com/@shadishirri?_r=1&_t=ZS-91y8i3OcOJh" target="_blank" rel="noreferrer" class="social tt" aria-label="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2c.3 2.5 1.7 4 4.1 4.2v3.4a7.2 7.2 0 0 1-4.1-1.3v6.7c0 4.3-2.7 7-6.6 7-3.5 0-6.3-2.6-6.3-6.1 0-4 3.2-6.5 7.4-6.1v3.6c-2.1-.3-3.7.6-3.7 2.4 0 1.4 1.1 2.5 2.6 2.5 1.6 0 2.8-.9 2.8-3.3V2h3.8Z" /></svg></a>
+                <a href="https://wa.me/+972568114114" target="_blank" rel="noreferrer" class="social wa" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a9.8 9.8 0 0 1 8.4 14.9L21.7 22l-5.2-1.3A9.8 9.8 0 0 1 2.2 12 9.8 9.8 0 0 1 12 2Zm0 2a7.8 7.8 0 0 0-6.6 12l.3.5-.7 2.6 2.7-.7.5.3A7.8 7.8 0 1 0 12 4Zm-3 3.9c.2 0 .4 0 .6.4l.8 1.9c.1.3 0 .5-.1.7l-.5.6c-.2.2-.2.3 0 .6.4.7 1 1.5 1.7 2.1.8.7 1.5 1 2.3 1.3.3.1.5.1.7-.1l.8-1c.2-.3.5-.3.8-.2l1.8.9c.3.2.5.3.5.5 0 .5-.3 1.4-.8 1.8-.5.5-1.4.7-2.4.5-2-.4-4-1.5-5.6-3.1-1.5-1.5-2.7-3.3-3.1-5.3-.2-.9 0-1.8.5-2.4.4-.5 1.2-.8 1.6-.8Z" /></svg></a>
+                <a href="mailto:info@shadi.ps" class="social em" aria-label="Email"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm1.7 2 7.3 5 7.3-5H4.7ZM20 17V8.9l-7.4 5.1a1 1 0 0 1-1.2 0L4 8.9V17h16Z" /></svg></a>
+              </div>
+              <div class="footerCards" aria-label="طرق الدفع">
+                <img src="/images/visa.png" alt="Visa" class="cardLogo" loading="lazy" />
+                <img src="/images/mastercard.png" alt="MasterCard" class="cardLogo" loading="lazy" />
+              </div>
+            </div>
+            <div class="siteFooterCopy">
+              جميع الحقوق محفوظة © شركة شادي شري للهندسة والاستشارات 2026 |
+              <a class="footerPolicy" href="/terms-and-policies">اقرأ الشروط والسياسات</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        var banner = document.getElementById('sharaHeroBanner');
+        if (!banner) return;
+
+        function storeApiBase() {
+          var host = window.location.hostname;
+          if (host === 'shara.shadi.ps' || host === 'www.shadi.ps' || host === 'shadi.ps') {
+            return 'https://store.shadi.ps/api/v01';
+          }
+          return window.location.protocol + '//' + host + ':4000/api/v01';
+        }
+
+        function resolveBannerUrl(path) {
+          if (!path) return '';
+          if (/^https?:\/\//i.test(path) || /^data:/i.test(path)) return path;
+          return storeApiBase().replace(/\/api\/v01\/?$/, '') + (path.charAt(0) === '/' ? path : '/' + path);
+        }
+
+        fetch(storeApiBase() + '/settings/banner/shara')
+          .then(function (response) { return response.ok ? response.json() : null; })
+          .then(function (data) {
+            var nextUrl = resolveBannerUrl(data && data.image_url);
+            if (nextUrl) banner.src = nextUrl;
+          })
+          .catch(function () {});
+      })();
+    </script>
+    <script src="{{ request.url_for('static', path='sharah.js') }}?v=20260527-arabic-search-helper2"></script>
+  </body>
+</html>

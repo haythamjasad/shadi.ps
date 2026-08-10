@@ -24,5 +24,9 @@ const extractErrorMessages = (error: AxiosBaseError) => {
  * @returns {string} The first error message.
  */
 export const extractErrorMessage = (error: AxiosBaseError) => {
+  if (error.response?.status === 429) {
+    return "بوابة الدفع مشغولة حاليا بسبب كثرة المحاولات. يرجى الانتظار قليلا ثم المحاولة مرة أخرى.";
+  }
+
   return error.response?.data?.message ?? extractErrorMessages(error)[0];
 };

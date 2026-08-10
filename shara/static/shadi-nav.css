@@ -1,0 +1,306 @@
+.shadiCloneNavbarBodyReset,
+body {
+  padding-top: 96px !important;
+}
+
+@media (max-width: 767px) {
+  body {
+    padding-top: 80px !important;
+  }
+}
+
+.shadiCloneNavbar {
+  position: fixed;
+  top: 16px;
+  left: 0;
+  right: 0;
+  z-index: 1002;
+  padding: 0;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 240ms ease;
+}
+
+.shadiCloneNavbar.isVisible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.shadiCloneToolbar {
+  position: relative;
+  width: min(var(--shara-layout-width, 1260px), calc(100% - (var(--shara-layout-gutter, 18px) * 2)));
+  margin: 0 auto;
+  min-height: 64px;
+  max-height: 64px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 0 1px rgba(248, 156, 28, 0.1), 1px 1.5px 2px -1px rgba(248, 156, 28, 0.15), 4px 4px 12px -2.5px rgba(248, 156, 28, 0.15);
+  overflow: visible;
+}
+
+.shadiCloneDesktopButtons {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateY(-50%);
+}
+
+.shadiCloneDesktopPill,
+.shadiCloneDrawerPill {
+  display: inline-flex;
+  min-width: 128px;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0 20px;
+  box-shadow: 0 8px 18px rgba(30, 30, 40, 0.08);
+  text-decoration: none;
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.shadiCloneDesktopPill:hover,
+.shadiCloneDrawerPill:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(30, 30, 40, 0.1);
+  transform: translateY(-1px);
+}
+
+.shadiCloneDesktopPill img,
+.shadiCloneDrawerPill img {
+  height: 24px;
+  width: auto;
+  max-width: 96px;
+  object-fit: contain;
+}
+
+.shadiCloneDesktopPill img[src*="store-nav-label"],
+.shadiCloneMobileLink img[src*="store-nav-label"],
+.shadiCloneDrawerPill img[src*="store-nav-label"] {
+  max-width: 82px;
+}
+
+.shadiCloneMobileLink img[src*="store-nav-label"],
+.shadiCloneMobileLink img[src*="Shadi.png"] {
+  max-width: 60px;
+}
+
+.shadiCloneDesktopLogo {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+}
+
+.shadiCloneDesktopLogo img,
+.shadiCloneMobileLogo img,
+.shadiCloneDrawerLogo img {
+  display: block;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.shadiCloneMobileBar {
+  display: none;
+}
+
+.shadiCloneMenuButton,
+.shadiCloneDrawerBackdrop,
+.shadiCloneDrawer {
+  display: none !important;
+}
+
+.shadiCloneMenuButton,
+.shadiCloneDrawerClose {
+  display: inline-flex;
+  width: 30px;
+  height: 36px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #3b3b44;
+  padding: 0;
+  cursor: pointer;
+}
+
+.shadiCloneMenuIcon {
+  position: relative;
+  display: inline-flex;
+  width: 22px;
+  height: 16px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.shadiCloneMenuIcon span {
+  display: block;
+  height: 2.4px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 220ms ease, opacity 180ms ease;
+}
+
+.shadiCloneMenuIcon.isClose span:nth-child(1) {
+  transform: translateY(6.8px) rotate(45deg);
+}
+
+.shadiCloneMenuIcon.isClose span:nth-child(2) {
+  opacity: 0;
+}
+
+.shadiCloneMenuIcon.isClose span:nth-child(3) {
+  transform: translateY(-6.8px) rotate(-45deg);
+}
+
+.shadiCloneDrawerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1003;
+  background: rgba(15, 23, 42, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.shadiCloneDrawerBackdrop.isOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.shadiCloneDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1004;
+  width: min(82vw, 360px);
+  height: 100vh;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  background: #fff;
+  padding: 16px;
+  box-shadow: -18px 0 45px rgba(15, 23, 42, 0.18);
+  transform: translateX(105%);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shadiCloneDrawer.isOpen {
+  transform: translateX(0);
+}
+
+.shadiCloneDrawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.shadiCloneDrawerLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.shadiCloneDrawerPill {
+  width: 100%;
+}
+
+.shadiCloneDrawerDivider {
+  height: 1px;
+  margin: 24px 0;
+  background: #000;
+}
+
+@media (max-width: 767px) {
+  .shadiCloneNavbar {
+    top: 16px;
+    padding: 0;
+  }
+
+  .shadiCloneToolbar {
+    width: calc(100% - 24px);
+    min-height: 46px;
+    max-height: 56px;
+    padding: 0 2px;
+  }
+
+  .shadiCloneDesktopButtons,
+  .shadiCloneDesktopLogo {
+    display: none;
+  }
+
+  .shadiCloneMobileBar {
+    display: flex;
+    min-height: 46px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1px;
+    direction: ltr;
+  }
+
+  .shadiCloneMobileLogo {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .shadiCloneMobileLinks {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) 1px minmax(0, 1fr);
+    align-items: center;
+    justify-items: center;
+    direction: ltr;
+  }
+
+  .shadiCloneMobileLink {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 1px;
+    transition: opacity 180ms ease;
+  }
+
+  .shadiCloneMobileLink:hover {
+    opacity: 0.75;
+  }
+
+  .shadiCloneMobileDivider {
+    align-self: stretch;
+    width: 1px;
+    margin: 6px 0;
+    background: #2f2f35;
+  }
+
+  .shadiCloneMobileLink img {
+    display: block;
+    width: 100%;
+    max-width: 68px;
+    height: 22px;
+    object-fit: contain;
+  }
+
+  .shadiCloneMobileLink[aria-label="إستشارة"] img {
+    max-width: 78px;
+  }
+}

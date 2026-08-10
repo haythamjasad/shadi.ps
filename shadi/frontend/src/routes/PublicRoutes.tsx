@@ -6,6 +6,7 @@ import {
   NotFound,
   PaymentStatus,
   PublicTransactions,
+  Shara,
 } from "./imports";
 
 const publicRoutes: RouteObject = {
@@ -18,6 +19,10 @@ const publicRoutes: RouteObject = {
     {
       path: "consulting",
       element: <PublicTransactions />,
+    },
+    {
+      path: "shara",
+      element: <Shara />,
     },
     {
       path: "transactions",

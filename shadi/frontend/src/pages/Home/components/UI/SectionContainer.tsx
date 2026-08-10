@@ -6,7 +6,7 @@ const SectionContainer: FC<StackProps> = ({ id, children, ...rest }) => {
   return (
     <Stack
       py={2}
-      px={5}
+      px={{ xs: 2, sm: 3, md: 5 }}
       justifyContent="center"
       sx={(theme) => ({
         position: "relative",
@@ -32,7 +32,7 @@ const SectionContainer: FC<StackProps> = ({ id, children, ...rest }) => {
               id === "home_top_section"
                 ? { xs: "auto", md: "90vh" }
               : "auto",
-          px: { xs: 0.1, sm: 2.5, md: 4 },
+          px: { xs: 0, sm: 2.5, md: 4 },
           maxWidth: "1750px",
           mx: "auto",
         }}

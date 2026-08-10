@@ -1,0 +1,9 @@
+{
+  "name": "shadi/store-backend-pdf",
+  "description": "mPDF renderer for Shadi Store order email PDFs on cPanel.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "mpdf/mpdf": "^8.2"
+  }
+}

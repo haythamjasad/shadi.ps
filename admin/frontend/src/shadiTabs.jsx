@@ -4,7 +4,8 @@ import { shadiApiDelete, shadiApiGet, shadiApiPost } from './shadiApi.js';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 const TRANSACTION_BUCKETS = [
-  { key: 'pending', label: 'قيد المتابعة' },
+  { key: 'pending', label: 'مدفوع - قيد المتابعة' },
+  { key: 'failed_payment', label: 'بانتظار الدفع' },
   { key: 'cancelled', label: 'ملغي' },
   { key: 'finished', label: 'تمت الزيارة' }
 ];
@@ -25,14 +26,23 @@ const LOCATION_LABELS = {
   ZOOM: 'Zoom'
 };
 const STATUS_LABELS = {
-  NEW: 'قيد المتابعة',
-  PENDING: 'قيد المتابعة',
+  NEW: 'بانتظار الدفع',
+  PENDING: 'مدفوع - قيد المتابعة',
   PAUSED: 'موقوف',
   FINISHED: 'تمت الزيارة',
   CANCELLED: 'ملغي'
 };
 
+function ResponsiveTableWrap({ children, minWidth = '760px', ariaLabel }) {
+  return (
+    <div className="responsive-table-wrap" style={{ '--responsive-table-min-width': minWidth }} role="region" aria-label={ariaLabel} tabIndex="0">
+      {children}
+    </div>
+  );
+}
+
 function getTransactionBucketPath(bucket) {
+  if (bucket === 'failed_payment') return '/transactions/new';
   return `/transactions/status/${bucket}`;
 }
 
@@ -176,12 +186,16 @@ function InfoRow({ label, value }) {
 
 export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
   const canReadList = hasPermission(currentAdmin, 'shadi_transactions', 'read_list');
+  const canReadUnpaid = hasPermission(currentAdmin, 'shadi_transactions', 'read_unpaid');
   const canUpdate = hasPermission(currentAdmin, 'shadi_transactions', 'update');
   const canDelete = hasPermission(currentAdmin, 'shadi_transactions', 'delete');
-  const [bucket, setBucket] = useState('pending');
+  const availableBuckets = useMemo(() => TRANSACTION_BUCKETS.filter((item) => (
+    item.key === 'failed_payment' ? canReadUnpaid : canReadList
+  )), [canReadList, canReadUnpaid]);
+  const [bucket, setBucket] = useState(availableBuckets[0]?.key || 'pending');
   const [nameFilter, setNameFilter] = useState('');
   const [phoneFilter, setPhoneFilter] = useState('');
-  const [bucketRows, setBucketRows] = useState({ pending: [], finished: [], cancelled: [] });
+  const [bucketRows, setBucketRows] = useState({ pending: [], failed_payment: [], finished: [], cancelled: [] });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -231,6 +245,10 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
     () => filteredRows.find((row) => String(row.id) === String(selectedId)) || null,
     [filteredRows, selectedId]
   );
+  const editableStatusOptions = useMemo(() => {
+    if (editing?.status !== 'NEW' || currentAdmin?.is_super_admin) return TRANSACTION_STATUS_OPTIONS;
+    return TRANSACTION_STATUS_OPTIONS.filter((status) => status !== 'PENDING');
+  }, [editing?.status, currentAdmin?.is_super_admin]);
 
   useEffect(() => {
     setPage(1);
@@ -261,8 +279,8 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
   };
 
   useEffect(() => {
-    if (!canReadList) {
-      setBucketRows({ pending: [], finished: [], cancelled: [] });
+    if (!canReadList && !canReadUnpaid) {
+      setBucketRows({ pending: [], failed_payment: [], finished: [], cancelled: [] });
       setSelectedId('');
       return undefined;
     }
@@ -276,16 +294,18 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
           await refreshSession();
         }
 
-        const [pendingResponse, finishedResponse, cancelledResponse] = await Promise.all([
-          shadiApiGet(getTransactionBucketPath('pending'), { page: 1, size: 500 }),
-          shadiApiGet(getTransactionBucketPath('finished'), { page: 1, size: 500 }),
-          shadiApiGet(getTransactionBucketPath('cancelled'), { page: 1, size: 500 })
+        const [pendingResponse, failedPaymentResponse, finishedResponse, cancelledResponse] = await Promise.all([
+          canReadList ? shadiApiGet(getTransactionBucketPath('pending'), { page: 1, size: 500 }) : null,
+          canReadUnpaid ? shadiApiGet(getTransactionBucketPath('failed_payment'), { page: 1, size: 500 }) : null,
+          canReadList ? shadiApiGet(getTransactionBucketPath('finished'), { page: 1, size: 500 }) : null,
+          canReadList ? shadiApiGet(getTransactionBucketPath('cancelled'), { page: 1, size: 500 }) : null
         ]);
 
         if (cancelled) return;
 
         const nextBucketRows = {
           pending: Array.isArray(pendingResponse?.data) ? pendingResponse.data.map(normalizeTransactionRow) : [],
+          failed_payment: Array.isArray(failedPaymentResponse?.data) ? failedPaymentResponse.data.map(normalizeTransactionRow) : [],
           finished: Array.isArray(finishedResponse?.data) ? finishedResponse.data.map(normalizeTransactionRow) : [],
           cancelled: Array.isArray(cancelledResponse?.data) ? cancelledResponse.data.map(normalizeTransactionRow) : []
         };
@@ -295,7 +315,7 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
         setSelectedId((current) => (currentBucketRows.some((row) => String(row.id) === String(current)) ? current : (currentBucketRows[0]?.id || '')));
       } catch (error) {
         if (!cancelled) {
-          setBucketRows({ pending: [], finished: [], cancelled: [] });
+          setBucketRows({ pending: [], failed_payment: [], finished: [], cancelled: [] });
           setSelectedId('');
           setError(error.message || 'فشل تحميل الاستشارات');
         }
@@ -308,7 +328,13 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
     return () => {
       cancelled = true;
     };
-  }, [canReadList, refreshSession, setError]);
+  }, [canReadList, canReadUnpaid, refreshSession, setError]);
+
+  useEffect(() => {
+    if (!availableBuckets.some((item) => item.key === bucket)) {
+      setBucket(availableBuckets[0]?.key || 'pending');
+    }
+  }, [availableBuckets, bucket]);
 
   useEffect(() => {
     const currentBucketRows = bucketRows[bucket] || [];
@@ -341,13 +367,15 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
     if (refreshSession) {
       await refreshSession();
     }
-    const [pendingResponse, finishedResponse, cancelledResponse] = await Promise.all([
-      shadiApiGet(getTransactionBucketPath('pending'), { page: 1, size: 500 }),
-      shadiApiGet(getTransactionBucketPath('finished'), { page: 1, size: 500 }),
-      shadiApiGet(getTransactionBucketPath('cancelled'), { page: 1, size: 500 })
+    const [pendingResponse, failedPaymentResponse, finishedResponse, cancelledResponse] = await Promise.all([
+      canReadList ? shadiApiGet(getTransactionBucketPath('pending'), { page: 1, size: 500 }) : null,
+      canReadUnpaid ? shadiApiGet(getTransactionBucketPath('failed_payment'), { page: 1, size: 500 }) : null,
+      canReadList ? shadiApiGet(getTransactionBucketPath('finished'), { page: 1, size: 500 }) : null,
+      canReadList ? shadiApiGet(getTransactionBucketPath('cancelled'), { page: 1, size: 500 }) : null
     ]);
     const nextBucketRows = {
       pending: Array.isArray(pendingResponse?.data) ? pendingResponse.data.map(normalizeTransactionRow) : [],
+      failed_payment: Array.isArray(failedPaymentResponse?.data) ? failedPaymentResponse.data.map(normalizeTransactionRow) : [],
       finished: Array.isArray(finishedResponse?.data) ? finishedResponse.data.map(normalizeTransactionRow) : [],
       cancelled: Array.isArray(cancelledResponse?.data) ? cancelledResponse.data.map(normalizeTransactionRow) : []
     };
@@ -363,7 +391,6 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
       setError('يجب إدخال ملاحظة الحالة');
       return;
     }
-
     setSaving(true);
     try {
       await shadiApiPost(`/transactions/${editing.id}`, {
@@ -394,7 +421,7 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
     }
   };
 
-  if (!canReadList) {
+  if (!canReadList && !canReadUnpaid) {
     return (
       <section className="card">
         <h2>الاستشارات</h2>
@@ -411,14 +438,15 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
           <input placeholder="بحث بالاسم" value={nameFilter} onChange={(event) => setNameFilter(event.target.value)} />
           <input placeholder="بحث برقم الهاتف" value={phoneFilter} onChange={(event) => setPhoneFilter(event.target.value)} />
           <select value={bucket} onChange={(event) => setBucket(event.target.value)}>
-            {TRANSACTION_BUCKETS.map((item) => (
+            {availableBuckets.map((item) => (
               <option key={item.key} value={item.key}>{item.label}</option>
             ))}
           </select>
         </div>
         {loading ? <p>جارٍ تحميل البيانات...</p> : (
           <>
-            <table>
+            <ResponsiveTableWrap minWidth="100%" ariaLabel="جدول الاستشارات">
+            <table className="responsive-table-card fit-table consulting-fit-table">
               <thead>
                 <tr>
                   <th>المعرف</th>
@@ -431,11 +459,11 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
               <tbody>
                 {pageRows.map((row) => (
                   <tr key={row.id} className={String(selectedId) === String(row.id) ? 'selected-row' : ''}>
-                    <td>{row.id}</td>
-                    <td>{row.name}</td>
-                    <td>{row.cost ?? '-'}</td>
-                    <td>{STATUS_LABELS[row.status] || row.status || '-'}</td>
-                    <td>
+                    <td data-label="المعرف">{row.id}</td>
+                    <td data-label="الاسم">{row.name}</td>
+                    <td data-label="التكلفة">{row.cost ?? '-'}</td>
+                    <td data-label="الحالة">{STATUS_LABELS[row.status] || row.status || '-'}</td>
+                    <td data-label="إجراءات" className="responsive-actions-cell">
                       <div className="actions-menu">
                         <button type="button" onClick={() => showTransaction(row.id)}>عرض</button>
                         <div className={`dropdown ${openMenuId === row.id ? 'open' : ''}`}>
@@ -481,12 +509,13 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
                   </tr>
                 ))}
                 {pageRows.length === 0 && (
-                  <tr>
+                  <tr className="responsive-empty-row">
                     <td colSpan="5">لا توجد استشارات مطابقة للفلاتر الحالية.</td>
                   </tr>
                 )}
               </tbody>
             </table>
+            </ResponsiveTableWrap>
             <PaginationBar pagination={pagination} pageSize={pageSize} setPage={setPage} setPageSize={setPageSize} />
           </>
         )}
@@ -510,7 +539,9 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
             <p><strong>الحالة:</strong> {STATUS_LABELS[selectedTransaction.status] || selectedTransaction.status || '-'}</p>
             <p><strong>ملاحظة الحالة:</strong> {selectedTransaction.adminNotes || '-'}</p>
             <div className="status-actions">
-              {canUpdate && TRANSACTION_STATUS_OPTIONS.map((status) => (
+              {canUpdate && TRANSACTION_STATUS_OPTIONS
+                .filter((status) => selectedTransaction.status !== 'NEW' || currentAdmin?.is_super_admin || status !== 'PENDING')
+                .map((status) => (
                 <button key={status} type="button" onClick={() => openEditorWithStatus(selectedTransaction, status)}>
                   {STATUS_LABELS[status] || status}
                 </button>
@@ -541,7 +572,7 @@ export function ShadiTransactions({ setError, currentAdmin, refreshSession }) {
             <label>
               <span>الحالة</span>
               <select value={editForm.status} onChange={(event) => setEditForm((current) => ({ ...current, status: event.target.value }))}>
-                {TRANSACTION_STATUS_OPTIONS.map((status) => (
+                {editableStatusOptions.map((status) => (
                   <option key={status} value={status}>{STATUS_LABELS[status] || status}</option>
                 ))}
               </select>
@@ -711,7 +742,8 @@ export function ShadiJoinRequests({ setError, currentAdmin, refreshSession }) {
         </div>
         {loading ? <p>جارٍ تحميل البيانات...</p> : (
           <>
-            <table>
+            <ResponsiveTableWrap minWidth="100%" ariaLabel="جدول طلبات الانضمام">
+            <table className="responsive-table-card fit-table">
               <thead>
                 <tr>
                   <th>المعرف</th>
@@ -726,13 +758,13 @@ export function ShadiJoinRequests({ setError, currentAdmin, refreshSession }) {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id} className={String(selectedId) === String(row.id) ? 'selected-row' : ''}>
-                    <td>{row.id}</td>
-                    <td><button type="button" className="link-button" onClick={() => showJoinRequest(row.id)}>{row.name}</button></td>
-                    <td>{row.phone || '-'}</td>
-                    <td>{formatList(row.engineeringType, SERVICE_LABELS)}</td>
-                    <td>{row.graduatedAt || '-'}</td>
-                    <td>{formatDate(row.createdAt)}</td>
-                    <td>
+                    <td data-label="المعرف">{row.id}</td>
+                    <td data-label="الاسم"><button type="button" className="link-button" onClick={() => showJoinRequest(row.id)}>{row.name}</button></td>
+                    <td data-label="الهاتف">{row.phone || '-'}</td>
+                    <td data-label="التخصص">{formatList(row.engineeringType, SERVICE_LABELS)}</td>
+                    <td data-label="سنة التخرج">{row.graduatedAt || '-'}</td>
+                    <td data-label="التاريخ">{formatDate(row.createdAt)}</td>
+                    <td data-label="إجراءات" className="responsive-actions-cell">
                       <div className="actions-menu">
                         <button type="button" className="secondary" onClick={() => showJoinRequest(row.id)}>عرض</button>
                         {canDelete && (
@@ -745,12 +777,13 @@ export function ShadiJoinRequests({ setError, currentAdmin, refreshSession }) {
                   </tr>
                 ))}
                 {rows.length === 0 && (
-                  <tr>
+                  <tr className="responsive-empty-row">
                     <td colSpan="7">لا توجد طلبات انضمام مطابقة للفلاتر الحالية.</td>
                   </tr>
                 )}
               </tbody>
             </table>
+            </ResponsiveTableWrap>
             <PaginationBar pagination={pagination} pageSize={pageSize} setPage={setPage} setPageSize={setPageSize} />
           </>
         )}

@@ -12,6 +12,17 @@ const envKey = rawEnv === 'production' || rawEnv === 'prod'
       : rawEnv.toUpperCase();
 
 const pick = (base) => process.env[`${base}_${envKey}`] ?? process.env[base];
+const normalizeSharahApiBase = (value) => {
+  const text = String(value || '').trim().replace(/\/+$/, '');
+  if (!text) return 'https://shara.shadi.ps/v01/api/sharah';
+  try {
+    const url = new URL(text);
+    if (/^\/api\/sharah\/?$/i.test(url.pathname)) return `${url.origin}/v01/api/sharah`;
+  } catch {
+    if (/^\/api\/sharah\/?$/i.test(text)) return '/v01/api/sharah';
+  }
+  return text;
+};
 const pickBool = (base, fallback = false) => {
   const value = pick(base);
   if (value == null || value === '') return fallback;
@@ -38,8 +49,11 @@ export const config = {
   recaptchaSecretKey: pick('RECAPTCHA_SECRET_KEY') ?? process.env.RECAPTCHA_SECRET_KEY,
   recaptchaVerifyUrl: pick('RECAPTCHA_VERIFY_URL') ?? process.env.RECAPTCHA_VERIFY_URL,
   recaptchaEnabled: pickBool('RECAPTCHA_ENABLED', true),
+  trustProxy: pick('TRUST_PROXY') ?? process.env.TRUST_PROXY ?? '',
   corsOrigin: process.env.CORS_ORIGIN,
   orderNotifyEmail: pick('ORDER_NOTIFY_EMAIL') ?? process.env.ORDER_NOTIFY_EMAIL,
   apiPrefix: pick('API_PREFIX') ?? process.env.API_PREFIX,
-  smtpEncryptionKey: pick('SMTP_ENCRYPTION_KEY') ?? process.env.SMTP_ENCRYPTION_KEY ?? process.env.JWT_SECRET
+  smtpEncryptionKey: pick('SMTP_ENCRYPTION_KEY') ?? process.env.SMTP_ENCRYPTION_KEY ?? process.env.JWT_SECRET,
+  sharahApiBase: normalizeSharahApiBase(pick('SHARAH_API_BASE_URL') ?? process.env.SHARAH_API_BASE_URL),
+  sharahAdminToken: pick('SHARAH_ADMIN_TOKEN') ?? process.env.SHARAH_ADMIN_TOKEN
 };

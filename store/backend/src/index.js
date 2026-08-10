@@ -8,13 +8,23 @@ import paymentRoutes from './routes/payments.js';
 import settingsRoutes from './routes/settings.js';
 import { runMigrations } from './bootstrap/run-migrations.js';
 import { config } from './config/env.js';
+import { getAppRoot } from './utils/app-paths.js';
 import { getUploadSubdir, getUploadsRoot } from './utils/app-paths.js';
+import { ensureProductVariantSchema } from './utils/product-variants.js';
 
 const app = express();
 
+function resolveTrustProxy(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized || ['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return 1;
+  if (/^\d+$/.test(normalized)) return Number(normalized);
+  return normalized;
+}
+
+app.set('trust proxy', resolveTrustProxy(config.trustProxy));
+
 const defaultOrigins = [
-  'https://store.shadi.ps',
-  'https://admin.shadi.ps',
   'http://localhost:3000',
   'http://localhost:4173',
   'http://localhost:5173',
@@ -26,7 +36,11 @@ const defaultOrigins = [
   'http://[::1]:3000',
   'http://[::1]:4173',
   'http://[::1]:5173',
-  'http://[::1]:5174'
+  'http://[::1]:5174',
+  'http://192.168.1.52:3000',
+  'http://192.168.1.52:4173',
+  'http://192.168.1.52:5173',
+  'http://192.168.1.52:5174'
 ];
 
 const configuredOrigins = (config.corsOrigin || config.baseUrl || defaultOrigins.join(','))
@@ -46,7 +60,7 @@ function isAllowedOrigin(origin) {
 
   try {
     const url = new URL(value);
-    if (url.protocol === 'https:' && /(^|\.)shadi\.ps$/i.test(url.hostname)) {
+    if ((url.protocol === 'https:' || url.protocol === 'http:') && /(^|\.)shadi\.ps$/i.test(url.hostname)) {
       return true;
     }
 
@@ -75,7 +89,7 @@ const corsOptions = {
   },
   credentials: false,
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Checkout-Token'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Checkout-Token', 'X-File-Name'],
   optionsSuccessStatus: 204
 };
 
@@ -85,7 +99,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Checkout-Token');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Checkout-Token, X-File-Name');
   }
 
   if (req.method === 'OPTIONS') {
@@ -98,7 +112,7 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json({
-  limit: '20mb',
+  limit: '120mb',
   verify: (req, _res, buffer) => {
     req.rawBody = buffer.toString('utf8');
   }
@@ -111,12 +125,14 @@ if (normalizedPrefix) {
 }
 
 app.use('/assets', express.static(getUploadSubdir('docs')));
+app.use('/email-assets', express.static(path.join(getAppRoot(), 'email-assets')));
 
 for (const prefix of prefixes) {
   const p = prefix === '/' ? '' : prefix.replace(/\/+$/, '');
   app.get(`${p}/health`, (req, res) => res.json({ ok: true }));
   app.use(`${p}/assets`, express.static(getUploadSubdir('docs')));
   app.use(`${p}/uploads`, express.static(getUploadsRoot()));
+  app.use(`${p}/email-assets`, express.static(path.join(getAppRoot(), 'email-assets')));
   app.use(`${p}/admin`, adminRoutes);
   app.use(`${p}/products`, productRoutes);
   app.use(`${p}/orders`, orderRoutes);
@@ -125,6 +141,14 @@ for (const prefix of prefixes) {
 }
 
 app.use((req, res) => {
+  if (/\/(?:api(?:\/v01)?\/)?(?:uploads|assets)\//i.test(req.path)) {
+    return res.status(404).json({
+      status: 'error',
+      code: 'FILE_NOT_FOUND',
+      message: `File ${req.originalUrl} not found`
+    });
+  }
+
   if (req.accepts('html')) {
     return res.redirect(302, '/');
   }
@@ -139,8 +163,9 @@ const port = process.env.PORT || 4000;
 
 async function startServer() {
   await runMigrations();
-  app.listen(port, () => {
-    console.log(`Backend running on http://localhost:${port}`);
+  await ensureProductVariantSchema();
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Backend running on http://0.0.0.0:${port}`);
   });
 }
 

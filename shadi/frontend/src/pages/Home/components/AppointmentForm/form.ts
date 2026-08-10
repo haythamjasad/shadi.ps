@@ -1,7 +1,8 @@
 import * as yup from "yup";
 import { LocationItem, ServiceTypeItem } from "./types";
+import { shouldEnableRecaptcha } from "@/utils/recaptcha";
 
-export const recaptchaEnabled = import.meta.env.PROD && !!import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+export const recaptchaEnabled = shouldEnableRecaptcha();
 
 export const validationSchema = yup.object().shape({
   name: yup.string().required("Please enter your name"),

@@ -4,7 +4,7 @@ import { api } from '../api/client';
 const DEFAULT_CURRENCY = 'ILS';
 
 const CURRENCY_META = {
-  ILS: { locale: 'he-IL', symbol: '₪' },
+  ILS: { locale: 'ar', symbol: '₪', symbolPosition: 'after' },
   USD: { locale: 'en-US', symbol: '$' }
 };
 
@@ -44,12 +44,12 @@ export function StoreSettingsProvider({ children }) {
       formatPrice: (amount) => {
         const numeric = Number(amount);
         if (!Number.isFinite(numeric)) return `${meta.symbol}0`;
-        return new Intl.NumberFormat(meta.locale, {
-          style: 'currency',
-          currency,
+        const formatted = new Intl.NumberFormat(meta.locale, {
           minimumFractionDigits: 0,
           maximumFractionDigits: 0
         }).format(numeric);
+        if (meta.symbolPosition === 'after') return `${formatted} ${meta.symbol}`;
+        return `${meta.symbol}${formatted}`;
       }
     };
   }, [currency]);

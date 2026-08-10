@@ -1,5 +1,5 @@
 import React, { useState, memo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { m } from 'framer-motion';
 import { ShoppingCart, Eye, Star } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
@@ -31,17 +31,14 @@ const ProductCard = memo(function ProductCard({
     threshold: 0.1
   });
 
-  const handleAddToCart = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const handleAddToCart = async () => {
     if (product?.is_available === 0) {
       toast.warning('هذا المنتج غير متوفر حالياً');
       return;
     }
 
-    if (Array.isArray(product?.color_options) && product.color_options.length > 0) {
-      toast.info('اختر اللون من صفحة المنتج أولاً');
+    if (product?.has_options || (Array.isArray(product?.variant_options) && product.variant_options.length > 0) || (Array.isArray(product?.color_options) && product.color_options.length > 0)) {
+      toast.info('اختر اللون أو القياس من صفحة المنتج أولاً');
       navigate(`/product/${product.id}`);
       return;
     }
@@ -70,28 +67,34 @@ const ProductCard = memo(function ProductCard({
 
   const rating = Number(product.rating) || 0;
   const ratingCount = Number(product.ratingCount) || 0;
+  const productUrl = `/product/${product.id}`;
 
   return (
-    <m.div
+    <m.article
       ref={disableAnimation ? undefined : ref}
       initial={disableAnimation ? false : { opacity: 0, y: 20 }}
       animate={disableAnimation ? undefined : (inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 })}
       transition={disableAnimation ? undefined : { duration: 0.4, ease: "easeOut" }}
       whileHover={{ y: -4 }}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer group border border-gray-100"
-      onClick={handleViewDetails}
+      className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full cursor-pointer group border border-gray-100"
     >
-      <div className="relative overflow-hidden aspect-square bg-gray-50">
+      <Link
+        to={productUrl}
+        className="absolute inset-0 z-10"
+        aria-label={`عرض تفاصيل ${product?.name || 'المنتج'}`}
+      />
+      <div className="relative overflow-hidden aspect-square bg-white">
         <img
           src={product?.image_url || (product?.image_urls && product.image_urls[0]) || product?.image}
           alt={product?.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
+          decoding="async"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
+        <div className="pointer-events-none absolute top-3 left-3 right-3 flex justify-between items-start z-10">
           <div className="flex flex-col gap-2">
             {product?.mrp && product.mrp > product.price && (
               <div className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg">
@@ -106,13 +109,11 @@ const ProductCard = memo(function ProductCard({
           </div>
         </div>
 
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewDetails();
-            }}
-            className="bg-white text-gray-900 px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:bg-gray-50 transition-all flex items-center gap-2"
+            type="button"
+            onClick={handleViewDetails}
+            className="pointer-events-auto bg-white text-gray-900 px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:bg-gray-50 transition-all flex items-center gap-2"
           >
             <Eye className="w-4 h-4" />
             عرض سريع
@@ -172,9 +173,10 @@ const ProductCard = memo(function ProductCard({
             </div>
 
             <button
+              type="button"
               onClick={handleAddToCart}
               disabled={isAddingToCart || product?.is_available === 0}
-              className={`px-3 py-1.5 sm:py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`relative z-20 px-3 py-1.5 sm:py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 isAddingToCart || product?.is_available === 0
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-[#f89c1c] text-[#1f1f27] hover:bg-[#e58f12]'
@@ -186,7 +188,7 @@ const ProductCard = memo(function ProductCard({
           </div>
         </div>
       </div>
-    </m.div>
+    </m.article>
   );
 });
 

@@ -27,7 +27,9 @@ const useAddTransaction = () => {
           }
         }
       } else {
-        showErrorSnackbar({ message: "Payment failed to add" });
+        const providerMessage =
+          data.paymentData?.message || data.message || "Payment failed to add";
+        showErrorSnackbar({ message: providerMessage });
       }
     },
     onError: (error) => {

@@ -1,15 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Bell, X } from 'react-feather';
 
-const DEFAULT_ANNOUNCEMENTS = [
-  {
-    id: 'support',
-    text: 'بحاجة للمساعدة؟ تواصل معنا للطلبات الخاصة والدعم.',
-    link: '/contact',
-    backgroundColor: '#F1F8E9',
-    textColor: '#2E7D32'
-  }
-];
+const DEFAULT_ANNOUNCEMENTS = [];
 
 /**
  * Announcement Strip Component

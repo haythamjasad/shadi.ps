@@ -122,18 +122,30 @@ export class TransactionController {
     } as Partial<Transaction>;
   }
 
+  private static getMetadataTransactionId(rawPayment: Record<string, any> | undefined) {
+    const metadata = rawPayment?.metadata && typeof rawPayment.metadata === 'object'
+      ? rawPayment.metadata as Record<string, any>
+      : undefined;
+    return TransactionController.parseMetadataValue(metadata?.transaction_id);
+  }
+
   static async create(req: Request, res: Response, next: NextFunction) {
     try {
       const draftTransaction = TransactionService.prepareCreateData(req.body);
       const paymentReference = uuidv4().replace(/-/g, '');
+      const transaction = await TransactionService.create(draftTransaction);
 
       const paymentData = await PaymentService.createPaymentTransaction(
-        String(draftTransaction.cost || 0) + "00",
+        String(draftTransaction.cost || 0),
         String(draftTransaction.email || ''),
         "USD",
         paymentReference,
         config.hostApiUrl + "/transactions/verify-payment/" + paymentReference,
         {
+          name: String(draftTransaction.name || ''),
+          phone: String(draftTransaction.phone || ''),
+          email: String(draftTransaction.email || ''),
+          note: String(draftTransaction.notes || ''),
           customer_name: String(draftTransaction.name || ''),
           customer_email: String(draftTransaction.email || ''),
           customer_phone: String(draftTransaction.phone || ''),
@@ -143,13 +155,28 @@ export class TransactionController {
             ? draftTransaction.serviceType.join(',')
             : '',
           cost: draftTransaction.cost,
+          transaction_id: transaction.id,
         }
       );
+
+      if (!paymentData?.status || !paymentData?.data?.authorization_url) {
+        const statusCode = paymentData?.statusCode && paymentData.statusCode >= 400 && paymentData.statusCode < 600
+          ? paymentData.statusCode
+          : 502;
+        res.status(statusCode).json({
+          status: statusCode,
+          message: paymentData?.message || "Payment initialization failed",
+          data: TransactionController.buildPublicTransactionResponse(transaction),
+          reference: paymentReference,
+          paymentData,
+        });
+        return;
+      }
 
       res.status(201).json({
         status: 201,
         message: "Payment initialized successfully",
-        data: null,
+        data: TransactionController.buildPublicTransactionResponse(transaction),
         reference: paymentReference,
         paymentData: paymentData,
       });
@@ -178,24 +205,24 @@ export class TransactionController {
       const rawPayment = paymentData.data as Record<string, any> | undefined;
       const paymentFields = TransactionController.extractPaymentFields(rawPayment);
 
-      if (paymentData.status === true && paymentData.data?.status === "success") {
-        const existingTransaction = paymentFields.transactionNO
-          ? await TransactionService.findByTransactionNo(String(paymentFields.transactionNO))
+      if (paymentData?.status === true && String(paymentData?.data?.status || '').toLowerCase() === "success") {
+        const metadataTransactionId = TransactionController.getMetadataTransactionId(rawPayment);
+        const existingMetadataTransaction = metadataTransactionId
+          ? await TransactionService.findById(metadataTransactionId).catch(() => null)
           : null;
+        const existingTransaction = existingMetadataTransaction || (paymentFields.transactionNO
+          ? await TransactionService.findByTransactionNo(String(paymentFields.transactionNO))
+          : null);
 
-        if (existingTransaction) {
-          res.redirect(config.baseUrl + '/payment-status/' + existingTransaction.id);
-          return;
-        }
+        const transaction = existingTransaction || await (async () => {
+          const transactionDraft = TransactionController.buildTransactionFromPayment(rawPayment);
+          return transactionDraft ? TransactionService.create(transactionDraft) : null;
+        })();
 
-        const transactionDraft = TransactionController.buildTransactionFromPayment(rawPayment);
-
-        if (!transactionDraft) {
+        if (!transaction) {
           res.redirect(config.baseUrl + '/payment-status/failed');
           return;
         }
-
-        const transaction = await TransactionService.create(transactionDraft);
         const subject = transaction.serviceType.includes(ServiceType.CHARGES) ? "تم تسديد المستحقات بنجاح" : "تم حجز الاستشارة بنجاح";
 
         const newStatus = transaction.serviceType.includes(ServiceType.CHARGES)
@@ -233,6 +260,19 @@ export class TransactionController {
   static async update(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
+      const existingTransaction = await TransactionService.findById(id);
+
+      if (existingTransaction.status === Status.NEW && req.body?.status === Status.PENDING) {
+        const isSuperAdmin = !!req.adminSession?.isSuperAdmin;
+        if (!isSuperAdmin) {
+          res.status(403).json({
+            status: 403,
+            message: 'هذا الإجراء متاح للمشرف الرئيسي فقط',
+          });
+          return;
+        }
+      }
+
       const transaction = await TransactionService.update(id, req.body);
 
       res.json({
@@ -252,8 +292,8 @@ export class TransactionController {
 
       res.json({
         status: 200,
-        message: "Transaction updated successfully",
-        data: transaction,
+        message: "Transaction retrieved successfully",
+        data: TransactionController.buildPublicTransactionResponse(transaction),
       });
     } catch (error) {
       next(error);
@@ -386,10 +426,13 @@ export class TransactionController {
       }
 
       const statusFilters = statusParam === Status.PENDING
-        ? [Status.NEW, Status.PENDING]
+        ? Status.PENDING
         : (statusParam as Status);
 
       const filters = TransactionController.buildStatusFilters(req, statusFilters);
+      if (statusParam === Status.PENDING) {
+        filters.paidOnly = true;
+      }
       const pagination = parsePaginationParams(req.query);
       const result = await TransactionService.findAll(filters, pagination);
 

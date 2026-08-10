@@ -8,6 +8,7 @@ import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, Loader2 } from 'lucide-re
 import ProductCard from '../components/ProductCard';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { buildCartItemKey } from '../utils/cartItem';
+import { findCartItemVariant, getVariantPrice } from '../utils/productVariants';
 
 function Cart() {
   const cartItems = useSelector(state => state.cart.items);
@@ -51,10 +52,11 @@ function Cart() {
 
   const cartDetails = cartItems.map(item => {
     const product = products.find(p => p.id === item.productId);
-    return product ? { ...item, product } : null;
+    const variant = findCartItemVariant(product, item);
+    return product ? { ...item, product, variant, unitPrice: getVariantPrice(product, variant?.id || item.selectedVariantId) } : null;
   }).filter(Boolean);
 
-  const subtotal = cartDetails.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  const subtotal = cartDetails.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
   const total = subtotal;
 
   if (loading) {
@@ -93,7 +95,7 @@ function Cart() {
               لم تقم بإضافة أي منتجات بعد. ابدأ التسوق الآن.
             </p>
             <Link
-              to="/products"
+              to="/"
               className="inline-flex items-center gap-2 rounded-xl bg-[#f89c1c] px-8 py-4 font-semibold text-[#1f1f27] hover:bg-[#e58f12] transition-all shadow-lg hover:shadow-xl"
             >
               ابدأ التسوق
@@ -116,11 +118,11 @@ function Cart() {
                 >
                   <div className="flex flex-row gap-4 sm:gap-6 items-start">
                     {/* Product Image */}
-                    <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 rounded-xl bg-white border border-gray-100">
                         <img
                           src={item.product.image_url || (item.product.image_urls && item.product.image_urls[0]) || item.product.image}
                           alt={item.product.name}
-                        className="w-full h-full object-cover rounded-xl"
+                        className="w-full h-full object-contain rounded-xl p-2"
                       />
                     </div>
 
@@ -136,6 +138,9 @@ function Cart() {
                               <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ backgroundColor: item.selectedColorHex || '#ccc' }} />
                               <span>{item.selectedColorName}</span>
                             </div>
+                          )}
+                          {item.selectedSizeName && (
+                            <div className="text-sm text-gray-500 mb-1">القياس: {item.selectedSizeName}</div>
                           )}
                           {item.product.brand && (
                             <p className="text-sm text-gray-500">{item.product.brand}</p>
@@ -153,7 +158,7 @@ function Cart() {
                       <div className="flex flex-col gap-3 sm:gap-4">
                         {/* Price */}
                         <div className="text-base sm:text-lg font-bold text-gray-900">
-                          {formatPrice(item.product.price)}
+                          {formatPrice(item.unitPrice)}
                         </div>
 
                         {/* Quantity Controls */}
@@ -183,7 +188,7 @@ function Cart() {
                         <div className="text-right">
                           <div className="text-sm text-gray-500 mb-1">المجموع الفرعي</div>
                           <div className="text-lg sm:text-xl font-bold text-gray-900">
-                            {formatPrice(item.product.price * item.quantity)}
+                            {formatPrice(item.unitPrice * item.quantity)}
                           </div>
                         </div>
                       </div>
@@ -225,7 +230,7 @@ function Cart() {
                 </Link>
 
                 <Link
-                  to="/products"
+                  to="/"
                   className="w-full border-2 border-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center"
                 >
                   متابعة التسوق

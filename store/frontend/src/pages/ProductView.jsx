@@ -13,6 +13,7 @@ import { Helmet } from 'react-helmet-async';
 import ProductCard from '../components/ProductCard';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { FaWhatsapp } from 'react-icons/fa';
+import { getProductVariants, getVariantImageUrl, getVariantPrice } from '../utils/productVariants';
 
 function formatFileSize(bytes) {
   const size = Number(bytes);
@@ -46,6 +47,22 @@ function getDocumentOpenUrl(url) {
   }
 
   return text;
+}
+
+function buildProductWhatsappMessage(product) {
+  const productUrl = product?.id
+    ? `https://store.shadi.ps/product/${encodeURIComponent(product.id)}`
+    : '';
+
+  const lines = [
+    product.name,
+    '',
+    'رابط المنتج:'
+  ];
+
+  if (productUrl) lines.push(productUrl);
+
+  return lines.join('\n');
 }
 
 function buildPdfPreviewUrl(url) {
@@ -232,6 +249,7 @@ function ProductView() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [similarProducts, setSimilarProducts] = useState([]);
   const [whatsappSettings, setWhatsappSettings] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
@@ -246,10 +264,31 @@ function ProductView() {
 
   const dispatch = useDispatch();
   useEffect(() => {
+    let cancelled = false;
+
     const fetchProduct = async () => {
       try {
-        const productData = await api.get(`/products/${id}`);
+        setLoading(true);
+        setSimilarProducts([]);
+        const productData = await api.get(`/products/${id}?docs=0`);
+        if (cancelled) return;
         setProduct(productData);
+        setLoading(false);
+
+        api.get(`/products/${id}/docs`)
+          .then((payload) => {
+            if (cancelled) return;
+            setProduct((current) => current
+              ? {
+                ...current,
+                docs: Array.isArray(payload?.docs) ? payload.docs : [],
+                links: Array.isArray(payload?.links) ? payload.links : []
+              }
+              : current);
+          })
+          .catch(() => {
+            // Technical files are optional and should not block the product page.
+          });
 
         const relatedQuery = productData?.type
           ? `/products?type=${encodeURIComponent(productData.type)}&excludeId=${encodeURIComponent(productData.id)}&limit=5`
@@ -258,26 +297,38 @@ function ProductView() {
             : '';
 
         if (relatedQuery) {
-          const similar = await api.get(relatedQuery);
-          setSimilarProducts(Array.isArray(similar) ? similar : []);
+          api.get(relatedQuery)
+            .then((similar) => {
+              if (cancelled) return;
+              setSimilarProducts(Array.isArray(similar) ? similar : []);
+            })
+            .catch(() => {
+              if (cancelled) return;
+              setSimilarProducts([]);
+            });
         } else {
           setSimilarProducts([]);
         }
       } catch (error) {
+        if (cancelled) return;
         console.error("Error fetching product:", error);
         toast.error("حدث خطأ أثناء تحميل بيانات المنتج.");
-        navigate('/products');
-      } finally {
+        navigate('/');
         setLoading(false);
       }
     };
 
     fetchProduct();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, navigate]);
 
   useEffect(() => {
-    const options = Array.isArray(product?.color_options) ? product.color_options : [];
-    setSelectedColor(options[0] || null);
+    const variants = getProductVariants(product);
+    setSelectedVariant(variants[0] || null);
+    setSelectedColor(variants[0]?.color_name ? { name: variants[0].color_name, hex: variants[0].color_hex } : null);
   }, [product]);
 
   useEffect(() => {
@@ -303,15 +354,18 @@ function ProductView() {
       toast.warning('هذا المنتج غير متوفر حالياً');
       return;
     }
-    if (Array.isArray(product?.color_options) && product.color_options.length > 0 && !selectedColor) {
-      toast.warning('يرجى اختيار اللون أولاً');
+    const variants = getProductVariants(product);
+    if (variants.length > 0 && !selectedVariant) {
+      toast.warning('يرجى اختيار اللون أو القياس أولاً');
       return;
     }
     dispatch(addToCart({
       productId: product.id,
       quantity,
+      selectedVariantId: selectedVariant?.id || '',
       selectedColorName: selectedColor?.name || '',
-      selectedColorHex: selectedColor?.hex || ''
+      selectedColorHex: selectedColor?.hex || '',
+      selectedSizeName: selectedVariant?.size_name || ''
     }));
     toast.success(`تمت إضافة ${quantity} قطعة إلى السلة`);
   };
@@ -321,8 +375,9 @@ function ProductView() {
   };
 
   const whatsappPhone = String(whatsappSettings?.phone || '').trim();
+  const whatsappMessage = product ? buildProductWhatsappMessage(product) : '';
   const whatsappLink = whatsappPhone
-    ? `https://wa.me/${whatsappPhone.replace(/[^0-9]/g, '')}`
+    ? `https://wa.me/${whatsappPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
     : null;
 
   if (loading) {
@@ -342,6 +397,36 @@ function ProductView() {
       ? [product.docs]
       : [];
   const docs = rawDocs.map((doc, index) => normalizeDocument(doc, index)).filter(Boolean);
+  const variantOptions = getProductVariants(product);
+  const displayPrice = getVariantPrice(product, selectedVariant?.id);
+  const displayMrp = Number(product.mrp || 0);
+  const hasVisibleDiscount = displayMrp > displayPrice;
+  const mainImage = getVariantImageUrl(product, selectedVariant);
+  const colorOptions = variantOptions.reduce((list, variant) => {
+    if (!variant.color_name) return list;
+    const key = `${variant.color_name.toLowerCase()}::${variant.color_hex || ''}`;
+    if (!list.some((item) => item.key === key)) {
+      list.push({ key, name: variant.color_name, hex: variant.color_hex });
+    }
+    return list;
+  }, []);
+  const visibleSizeVariants = selectedColor
+    ? variantOptions.filter((variant) =>
+      String(variant.color_name || '').toLowerCase() === String(selectedColor.name || '').toLowerCase()
+      && String(variant.color_hex || '') === String(selectedColor.hex || '')
+    )
+    : variantOptions;
+  const hasSizeChoices = visibleSizeVariants.some((variant) => variant.size_name);
+  const selectedOptionLabel = [selectedVariant?.color_name, selectedVariant?.size_name].filter(Boolean).join(' / ');
+
+  const selectVariantColor = (color) => {
+    const matches = variantOptions.filter((variant) =>
+      String(variant.color_name || '').toLowerCase() === String(color.name || '').toLowerCase()
+      && String(variant.color_hex || '') === String(color.hex || '')
+    );
+    setSelectedColor({ name: color.name, hex: color.hex });
+    setSelectedVariant(matches[0] || null);
+  };
 
   return (
     <>
@@ -372,11 +457,23 @@ function ProductView() {
               transition={{ delay: 0.1 }}
             >
               <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 aspect-square sticky top-4">
-                <img
-                  src={product.image_url || (product.image_urls && product.image_urls[0]) || product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+                {mainImage ? (
+                  <img
+                    src={mainImage}
+                    alt={selectedOptionLabel ? `${product.name} - ${selectedOptionLabel}` : product.name}
+                    className="w-full h-full object-contain p-4"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-8 text-center">
+                    <div>
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                        <ShoppingCart className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <p className="text-lg font-bold text-gray-800">لا توجد صورة لهذا المنتج</p>
+                      <p className="mt-2 text-sm text-gray-500">أضف صورة أساسية أو صورة خاصة للخيار من لوحة الإدارة.</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </m.div>
 
@@ -412,49 +509,94 @@ function ProductView() {
 
               {/* Price */}
               <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 border border-gray-200">
-                <div className="flex items-baseline gap-3 mb-2">
-                  <span className="text-4xl font-bold text-gray-900">
-                    {formatPrice(product.price)}
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <span className="text-4xl font-bold text-gray-900" dir="rtl">
+                    {formatPrice(displayPrice)}
                   </span>
-                  {product.mrp && product.mrp > product.price && (
+                  {hasVisibleDiscount && (
                     <>
                       <span className="text-2xl text-gray-400 line-through">
-                        {formatPrice(product.mrp)}
+                        {formatPrice(displayMrp)}
                       </span>
                       <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
-                        خصم {calculateDiscount(product.mrp, product.price)}%
+                        خصم {calculateDiscount(displayMrp, displayPrice)}%
                       </span>
                     </>
                   )}
                 </div>
-                {product.mrp && product.mrp > product.price && (
+                {hasVisibleDiscount && (
                   <p className="text-sm text-green-600 font-semibold">
-                    وفّر {formatPrice(product.mrp - product.price)}
+                    وفّر {formatPrice(displayMrp - displayPrice)}
                   </p>
+                )}
+                {selectedVariant && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {selectedVariant.color_name && (
+                      <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-sm font-semibold text-gray-800">
+                        {selectedVariant.color_hex && <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: selectedVariant.color_hex }} />}
+                        اللون: {selectedVariant.color_name}
+                      </span>
+                    )}
+                    {selectedVariant.size_name && (
+                      <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-sm font-semibold text-gray-800">
+                        القياس: {selectedVariant.size_name}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {Array.isArray(product?.color_options) && product.color_options.length > 0 && (
+              {variantOptions.length > 0 && (
                 <div className="space-y-3">
-                  <label className="block text-sm font-semibold text-gray-900">اللون</label>
-                  <div className="flex flex-wrap gap-3">
-                    {product.color_options.map((color) => {
-                      const active = selectedColor?.name === color.name && selectedColor?.hex === color.hex;
-                      return (
-                        <button
-                          key={`${color.name}-${color.hex}`}
-                          type="button"
-                          onClick={() => setSelectedColor(color)}
-                          className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all ${
-                            active ? 'border-[#f89c1c] bg-[#f89c1c] text-[#1f1f27]' : 'border-gray-300 bg-white text-gray-900 hover:border-[#f89c1c]'
-                          }`}
-                        >
-                          <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color.hex }} />
-                          <span>{color.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {colorOptions.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-900">اللون</label>
+                      <div className="flex flex-wrap gap-3">
+                        {colorOptions.map((color) => {
+                          const active = String(selectedColor?.name || '').toLowerCase() === color.name.toLowerCase()
+                            && String(selectedColor?.hex || '') === String(color.hex || '');
+                          return (
+                            <button
+                              key={color.key}
+                              type="button"
+                              onClick={() => selectVariantColor(color)}
+                              className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                                active ? 'border-[#f89c1c] bg-[#f89c1c] text-[#1f1f27]' : 'border-gray-300 bg-white text-gray-900 hover:border-[#f89c1c]'
+                              }`}
+                            >
+                              {color.hex && <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color.hex }} />}
+                              <span>{color.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {hasSizeChoices && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-900">القياس</label>
+                      <div className="flex flex-wrap gap-3">
+                        {visibleSizeVariants.map((variant) => {
+                          const active = selectedVariant?.id === variant.id;
+                          return (
+                            <button
+                              key={variant.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedVariant(variant);
+                                if (variant.color_name) setSelectedColor({ name: variant.color_name, hex: variant.color_hex });
+                              }}
+                              className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                                active ? 'border-[#f89c1c] bg-[#f89c1c] text-[#1f1f27]' : 'border-gray-300 bg-white text-gray-900 hover:border-[#f89c1c]'
+                              }`}
+                            >
+                              {variant.size_name || variant.color_name || 'الخيار'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

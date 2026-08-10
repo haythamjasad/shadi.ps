@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { finalizePaidPaymentTransaction } from '../src/routes/payments.js';
 
-test('finalizePaidPaymentTransaction reserves stock and updates existing paid order state', async () => {
+test('finalizePaidPaymentTransaction updates existing paid order state without stock reservation', async () => {
   const calls = [];
   let committed = false;
   let rolledBack = false;
-  let reservedItems = null;
+  let reserveCalled = false;
 
   const conn = {
     async beginTransaction() {
@@ -61,23 +61,15 @@ test('finalizePaidPaymentTransaction reserves stock and updates existing paid or
     fallbackReference: 'ref-1',
     lahzaSettings: { currency: 'ILS' },
     deps: {
-      reserveStockForItems: async (_conn, items) => {
-        reservedItems = items;
+      reserveStockForItems: async () => {
+        reserveCalled = true;
       }
     }
   });
 
   assert.equal(result.orderId, 55);
   assert.equal(result.shouldSendNotifications, true);
-  assert.deepEqual(reservedItems, [{
-    id: 1,
-    order_id: 55,
-    product_id: 7,
-    product_name: 'Pipe',
-    quantity: 2,
-    unit_price: 60,
-    line_total: 120
-  }]);
+  assert.equal(reserveCalled, false);
   assert.equal(committed, true);
   assert.equal(rolledBack, false);
   assert.ok(calls.some((entry) => typeof entry === 'object' && String(entry.sql).startsWith('UPDATE orders SET status = ?')));

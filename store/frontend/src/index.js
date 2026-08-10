@@ -36,19 +36,5 @@ if (rootElement.hasChildNodes()) {
   );
 }
 
-// Register service worker for PWA functionality
-// This enables offline capabilities and app-like experience
-serviceWorkerRegistration.register({
-  onUpdate: registration => {
-    // Notify users of updates when available
-    const waitingServiceWorker = registration.waiting;
-    if (waitingServiceWorker) {
-      waitingServiceWorker.addEventListener('statechange', event => {
-        if (event.target.state === 'activated') {
-          window.location.reload();
-        }
-      });
-      waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
-    }
-  }
-});
+// Keep cPanel deploys deterministic and avoid stale product data/assets.
+serviceWorkerRegistration.unregister();

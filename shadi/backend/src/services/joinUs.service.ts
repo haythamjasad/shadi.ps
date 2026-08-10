@@ -17,6 +17,16 @@ export interface JoinUsFilters {
 }
 
 export class JoinUsService {
+  private static readonly SORT_FIELDS: Readonly<Record<string, string>> = {
+    id: 'id',
+    name: 'name',
+    phone: 'phone',
+    email: 'email',
+    graduatedAt: 'graduatedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+  };
+
   static async create(data: Partial<JoinUs>): Promise<JoinUs> {
     const joinUs = joinUsRepository.create(data);
     return joinUsRepository.save(joinUs);
@@ -69,7 +79,7 @@ export class JoinUsService {
     }
 
     // Apply sorting
-    const sortField = pagination.sort || 'createdAt';
+    const sortField = JoinUsService.SORT_FIELDS[pagination.sort || ''] || 'createdAt';
     const sortOrder = pagination.order || 'DESC';
     queryBuilder.orderBy(`joinUs.${sortField}`, sortOrder);
 

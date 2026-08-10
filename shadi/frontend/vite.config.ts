@@ -2,8 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
+const isCpanelHotfixBuild = process.env.VITE_CPANEL_HOTFIX === "1";
+
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: process.env.VITE_BASE_PATH || "/",
   plugins: [react()],
   server: {
     port: 5173,
@@ -14,8 +17,12 @@ export default defineConfig({
     },
   },
   build: {
+    modulePreload: isCpanelHotfixBuild ? false : undefined,
     rollupOptions: {
       output: {
+        ...(isCpanelHotfixBuild
+          ? {}
+          : {
         manualChunks(id) {
           if (!id.includes("node_modules")) {
             return;
@@ -83,6 +90,7 @@ export default defineConfig({
 
           return "app-vendor";
         },
+            }),
       },
     },
   },

@@ -9,7 +9,7 @@ function Profile() {
         <p className="text-sm text-gray-600 mb-4">
           حسابات العملاء غير مفعلة. يمكنك إتمام الطلب كزائر.
         </p>
-        <Link to="/products" className="text-gray-900 font-semibold hover:underline">
+        <Link to="/" className="text-gray-900 font-semibold hover:underline">
           متابعة التسوق
         </Link>
       </div>

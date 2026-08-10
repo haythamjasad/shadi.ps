@@ -6,10 +6,32 @@ import { config } from '../config/env.js';
 const MIGRATIONS_DIR = path.resolve(process.cwd(), 'sql', 'migrations');
 
 function splitSqlStatements(sql) {
-  return String(sql || '')
-    .split(/;\s*(?:\r?\n|$)/)
-    .map((statement) => statement.trim())
-    .filter(Boolean);
+  const statements = [];
+  let delimiter = ';';
+  let buffer = '';
+
+  for (const rawLine of String(sql || '').split(/\r?\n/)) {
+    const line = rawLine;
+    const delimiterMatch = line.trim().match(/^DELIMITER\s+(.+)$/i);
+    if (delimiterMatch) {
+      if (buffer.trim()) {
+        statements.push(buffer.trim());
+        buffer = '';
+      }
+      delimiter = delimiterMatch[1];
+      continue;
+    }
+
+    buffer += `${line}\n`;
+    const trimmed = buffer.trimEnd();
+    if (trimmed.endsWith(delimiter)) {
+      statements.push(trimmed.slice(0, -delimiter.length).trim());
+      buffer = '';
+    }
+  }
+
+  if (buffer.trim()) statements.push(buffer.trim());
+  return statements.filter(Boolean);
 }
 
 function getAddColumnTarget(statement) {

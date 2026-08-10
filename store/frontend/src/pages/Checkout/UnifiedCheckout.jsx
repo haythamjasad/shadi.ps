@@ -8,6 +8,7 @@ import { api } from '../../api/client';
 import { clearCart } from '../../redux/cartSlice';
 import { useStoreSettings } from '../../context/StoreSettingsContext';
 import { buildCartItemKey } from '../../utils/cartItem';
+import { findCartItemVariant, getVariantPrice } from '../../utils/productVariants';
 
 const emptyAddress = {
   line1: '',
@@ -103,12 +104,6 @@ function isValidPhone(value) {
 function getCheckoutErrorMessage(error) {
   const message = String(error?.message || '').trim();
   if (!message) return 'فشل بدء عملية الدفع';
-  if (message.startsWith('Insufficient stock for ')) {
-    return `الكمية المطلوبة غير متوفرة حالياً للمنتج: ${message.replace('Insufficient stock for ', '').trim()}`;
-  }
-  if (message === 'Insufficient stock for one or more products') {
-    return 'بعض المنتجات في السلة لم تعد متوفرة بالكمية المطلوبة. حدّث الكمية ثم حاول مرة أخرى.';
-  }
   if (message === 'Payment initiation failed') return 'فشل بدء عملية الدفع';
   if (message === 'Customer email is required for Lahza payment') return 'البريد الإلكتروني مطلوب لإتمام الدفع الإلكتروني';
   if (message === 'Lahza payment gateway is disabled') return 'بوابة الدفع غير مفعلة حالياً';
@@ -379,27 +374,21 @@ function UnifiedCheckout() {
         if (!product) return null;
         return {
           ...item,
-          product
+          product,
+          variant: findCartItemVariant(product, item),
+          unitPrice: getVariantPrice(product, findCartItemVariant(product, item)?.id || item.selectedVariantId)
         };
       })
       .filter(Boolean);
   }, [cartItems, products]);
 
-  const subtotal = cartDetails.reduce((acc, item) => acc + (Number(item.product.price) || 0) * item.quantity, 0);
+  const subtotal = cartDetails.reduce((acc, item) => acc + (Number(item.unitPrice) || 0) * item.quantity, 0);
   const total = subtotal;
 
   const cartStockError = useMemo(() => {
     const unavailableItem = cartDetails.find(({ product }) => Number(product?.is_available) === 0 || Number(product?.is_hidden) === 1);
     if (unavailableItem) {
       return `هذا المنتج غير متوفر حالياً: ${unavailableItem.product?.name || ''}`.trim();
-    }
-
-    const insufficientItem = cartDetails.find(({ product, quantity }) => {
-      const stock = Number(product?.stock);
-      return Number.isFinite(stock) && stock > 0 && Number(quantity) > stock;
-    });
-    if (insufficientItem) {
-      return `الكمية المطلوبة غير متوفرة حالياً للمنتج: ${insufficientItem.product?.name || ''}`.trim();
     }
 
     return '';
@@ -439,8 +428,10 @@ function UnifiedCheckout() {
       const items = cartDetails.map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
+        selectedVariantId: item.selectedVariantId || item.variant?.id || '',
         selectedColorName: item.selectedColorName || '',
-        selectedColorHex: item.selectedColorHex || ''
+        selectedColorHex: item.selectedColorHex || '',
+        selectedSizeName: item.selectedSizeName || item.variant?.size_name || ''
       }));
 
       const paymentResponse = await api.post('/payments/initiate', {
@@ -671,8 +662,9 @@ function UnifiedCheckout() {
                   <span>
                     {item.product.name}
                     {item.selectedColorName ? ` - ${item.selectedColorName}` : ''} × {item.quantity}
+                    {item.selectedSizeName ? ` - ${item.selectedSizeName}` : ''}
                   </span>
-                  <span>{formatPrice((Number(item.product.price) || 0) * item.quantity)}</span>
+                  <span>{formatPrice((Number(item.unitPrice) || 0) * item.quantity)}</span>
                 </div>
               ))}
             </div>

@@ -6,6 +6,16 @@ import {
 } from "../entities/Transaction";
 
 export class EmailTemplate {
+  private static escapeHtml(value: unknown): string {
+    const text = String(value ?? "");
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   /**
    * Generate transaction confirmation email HTML
    * @param transaction - The transaction object with all details
@@ -33,6 +43,22 @@ export class EmailTemplate {
             .replace(",", "")
         : "-";
     const statusColor = this.getStatusColor(transaction.status);
+    const safeTransactionId = this.escapeHtml(transaction.id);
+    const safeCustomerName = this.escapeHtml(transaction.name);
+    const safeCustomerPhone = this.escapeHtml(transaction.phone);
+    const safeServiceTypes = this.escapeHtml(
+      transaction.serviceType
+        .map((st) => this.getServiceTypeText(st as ServiceType))
+        .join(", ")
+    );
+    const safeLocation = this.escapeHtml(this.getLocationText(transaction.location));
+    const safeFormattedDate = this.escapeHtml(formattedDate);
+    const safeNotes = this.escapeHtml(transaction.notes);
+    const safeTransactionNo = this.escapeHtml(transaction.transactionNO);
+    const safeCardNo = this.escapeHtml(transaction.cardNo);
+    const safeCardType = this.escapeHtml(transaction.cardType);
+    const safeTransactionDateFormatted = this.escapeHtml(transactionDateFormatted);
+    const safeCost = this.escapeHtml(transaction.cost);
 
     return `
       <!DOCTYPE html>
@@ -254,7 +280,7 @@ export class EmailTemplate {
           <div class="header">
             <h1>شادي شري للهندسة والاستشارات</h1>
             <div style="font-size: 18px; margin: 8px 0">اشعار دفع</div>
-            <div class="transaction-id">رقم الطلب: ${transaction.id}</div>
+            <div class="transaction-id">رقم الطلب: ${safeTransactionId}</div>
           </div>
 
           <div class="content">
@@ -264,15 +290,11 @@ export class EmailTemplate {
               <div class="payment-section">
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${
-                      transaction.name
-                    }</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeCustomerName}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">الاسم:</td>
                   </tr>
                   <tr>
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${
-                      transaction.phone
-                    }</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeCustomerPhone}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">رقم الهاتف:</td>
                   </tr>
                 </table>
@@ -285,26 +307,22 @@ export class EmailTemplate {
               <div class="payment-section">
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${transaction.serviceType
-                      .map((st) => this.getServiceTypeText(st as ServiceType))
-                      .join(", ")}</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeServiceTypes}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">نوع الخدمة:</td>
                   </tr>
                   <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${this.getLocationText(
-                      transaction.location
-                    )}</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeLocation}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">الموقع:</td>
                   </tr>
                   <tr>
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${formattedDate}</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeFormattedDate}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">تاريخ الطلب:</td>
                   </tr>
                   ${
                     transaction.notes
                       ? `
                   <tr>
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${transaction.notes}</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeNotes}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">معلومات إضافية:</td>
                   </tr>
                   `
@@ -325,19 +343,19 @@ export class EmailTemplate {
               <div class="payment-section">
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${transaction.transactionNO}</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeTransactionNo}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">رقم الحركة:</td>
                   </tr>
                   <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${transaction.cardNo}</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeCardNo}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">رقم البطاقة:</td>
                   </tr>
                   <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${transaction.cardType}</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeCardType}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">نوع البطاقة:</td>
                   </tr>
                   <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
-                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${transactionDateFormatted}</td>
+                    <td class="payment-value" style="padding: 8px 0; text-align: right;">${safeTransactionDateFormatted}</td>
                     <td class="payment-label" style="padding: 8px 0; direction: rtl; text-align: right;">تاريخ الحركة:</td>
                   </tr>
                 </table>
@@ -354,7 +372,7 @@ export class EmailTemplate {
               <div class="cost-section">
                 <div class="cost-label">المبلغ الإجمالي للطلب</div>
                 <div class="cost-amount">
-                  <span class="currency">\$</span>${transaction.cost}
+                  <span class="currency">\$</span>${safeCost}
                 </div>
               </div>
             </div>

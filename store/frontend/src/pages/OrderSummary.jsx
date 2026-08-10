@@ -11,9 +11,7 @@ function buildSummaryTokenStorageKey(orderId, paymentId) {
 
 function getOrderStatusLabel(status) {
   const value = String(status || '').trim().toLowerCase();
-  if (value === 'paid') return 'مدفوع';
-  if (value === 'packed') return 'تم التجهيز';
-  if (value === 'shipped') return 'تم الشحن';
+  if (value === 'paid') return 'قيد التجهيز';
   if (value === 'delivered') return 'تم التسليم';
   if (value === 'cancelled') return 'ملغي';
   if (value === 'pending_payment') return 'بانتظار تأكيد الدفع';
@@ -146,7 +144,7 @@ function OrderSummary() {
           <h1 className="mb-3 text-2xl font-extrabold text-white">تعذر تحميل تأكيد الطلب</h1>
           <p className="text-sm leading-7 text-white/70">{error}</p>
           <div className="mt-6 flex justify-center">
-            <Link to="/products" className="inline-flex items-center gap-2 rounded-full bg-[#f89c1c] px-5 py-3 text-sm font-bold text-[#1f1f27]">
+            <Link to="/" className="inline-flex items-center gap-2 rounded-full bg-[#f89c1c] px-5 py-3 text-sm font-bold text-[#1f1f27]">
               العودة للمنتجات
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -189,7 +187,7 @@ function OrderSummary() {
                 تحديث الآن
                 <RefreshCw className="h-4 w-4" />
               </button>
-              <Link to="/products" className="inline-flex items-center gap-2 rounded-full border border-[#ffffff18] px-5 py-3 text-sm font-bold text-white">
+              <Link to="/" className="inline-flex items-center gap-2 rounded-full border border-[#ffffff18] px-5 py-3 text-sm font-bold text-white">
                 متابعة التسوق
                 <ArrowLeft className="h-4 w-4" />
               </Link>
@@ -236,7 +234,7 @@ function OrderSummary() {
                     <div className="min-w-0 flex-1 leading-7 text-[#111827]">
                       <div className="font-bold">{item.product_name}</div>
                       <div className="text-[#6b7280]">
-                        {item.color_name || 'اللون الافتراضي'}
+                        {[item.color_name, item.size_name].filter(Boolean).join(' / ') || 'الخيار الافتراضي'}
                       </div>
                     </div>
                     <div className="shrink-0 font-extrabold text-[#9a3412]">{formatPrice(item.line_total || 0)}</div>
@@ -277,6 +275,10 @@ function OrderSummary() {
                 {paymentId ? <div className="flex items-start justify-between gap-4"><span>رقم الدفع</span><strong className="text-[#111827]">{paymentId}</strong></div> : null}
                 <div className="flex items-start justify-between gap-4"><span>حالة الطلب</span><strong className="text-[#111827]">{getOrderStatusLabel(order?.status)}</strong></div>
                 {payment?.status ? <div className="flex items-start justify-between gap-4"><span>حالة الدفع</span><strong className="text-[#111827]">{getPaymentStatusLabel(payment.status)}</strong></div> : null}
+                <div className="flex items-start justify-between gap-4"><span>المجموع قبل الخصم</span><strong className="text-[#111827]">{formatPrice(order?.subtotal || 0)}</strong></div>
+                {Number(order?.discount_amount || 0) > 0 ? (
+                  <div className="flex items-start justify-between gap-4"><span>الخصم</span><strong className="text-green-700">-{formatPrice(order.discount_amount)}</strong></div>
+                ) : null}
                 <div className="flex items-start justify-between gap-4 border-t border-dashed border-[#e5e7eb] pt-4"><span>الإجمالي</span><strong className="text-lg text-[#9a3412]">{formatPrice(order?.total || 0)}</strong></div>
               </div>
             </section>
@@ -294,7 +296,7 @@ function OrderSummary() {
             </section>
 
             <div className="flex flex-wrap gap-3">
-              <Link to="/products" className="inline-flex items-center gap-2 rounded-full bg-[#f89c1c] px-5 py-3 text-sm font-bold text-[#1f1f27]">
+              <Link to="/" className="inline-flex items-center gap-2 rounded-full bg-[#f89c1c] px-5 py-3 text-sm font-bold text-[#1f1f27]">
                 متابعة التسوق
                 <ArrowLeft className="h-4 w-4" />
               </Link>

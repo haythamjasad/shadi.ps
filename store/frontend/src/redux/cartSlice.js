@@ -26,8 +26,10 @@ const cartSlice = createSlice({
     addToCart(state, action) {
       const payload = {
         ...action.payload,
+        selectedVariantId: String(action.payload?.selectedVariantId || '').trim(),
         selectedColorName: String(action.payload?.selectedColorName || '').trim(),
-        selectedColorHex: String(action.payload?.selectedColorHex || '').trim().toUpperCase()
+        selectedColorHex: String(action.payload?.selectedColorHex || '').trim().toUpperCase(),
+        selectedSizeName: String(action.payload?.selectedSizeName || '').trim()
       };
       const item = state.items.find(i => isSameCartItem(i, payload));
       if (item) {

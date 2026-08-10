@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { Router } from 'express';
 import pool from '../db.js';
 import { config } from '../config/env.js';
-import { buildOrderSummary, reserveStockForItems, validateCustomerAddress } from '../utils/order.js';
+import { buildOrderSummary, createOrderFromDraft, reserveStockForItems, validateCustomerAddress } from '../utils/order.js';
 import { verifyRecaptchaToken } from '../utils/recaptcha.js';
 import { sendOrderEmail, sendInternalOrderEmail, getSmtpSettings } from '../utils/mailer.js';
 import { getResolvedLahzaSettings } from '../utils/lahza-settings.js';
@@ -12,10 +12,10 @@ import {
   createCheckoutAccessToken,
   verifyCheckoutAccessToken
 } from '../utils/checkout-access.js';
-import { getOrderSelectFields } from '../utils/order-select-fields.js';
+import { getOrderSelectFields, hasOrderColumn } from '../utils/order-select-fields.js';
 
 const router = Router();
-const ORDER_ITEM_SELECT_FIELDS = 'id, order_id, product_id, product_name, color_name, color_hex, quantity, unit_price, line_total';
+const ORDER_ITEM_SELECT_FIELDS = 'id, order_id, product_id, supplier_id, product_name, color_name, color_hex, variant_id, size_name, quantity, unit_price, purchase_price, line_total';
 const PAYMENT_FINALIZE_FIELDS = 'id, order_id, amount, status, transaction_id, raw_response, order_payload';
 
 function parsePositiveInteger(value) {
@@ -31,6 +31,19 @@ function stringifyJson(value) {
   } catch {
     return null;
   }
+}
+
+function buildLahzaAuditRawResponse(raw, audit = {}) {
+  return {
+    ...(raw && typeof raw === 'object' ? raw : {}),
+    local_request: {
+      provider: 'Lahza',
+      amount_major: audit.amountMajor,
+      amount_minor: audit.amountMinor,
+      currency: audit.currency,
+      reference: audit.reference
+    }
+  };
 }
 
 function safeJsonParse(text) {
@@ -80,9 +93,17 @@ function getLahzaVerifyUrl(reference, settings) {
   return `${normalizeLahzaBaseUrl(settings)}/verify/${encodeURIComponent(String(reference))}`;
 }
 
-function toMinorUnits(amount) {
+export function toMinorUnits(amount) {
   const numeric = Number(amount) || 0;
   return Math.max(0, Math.round(numeric * 100));
+}
+
+export function calculatePaymentAmount(order = {}) {
+  const productTotal = Number(order?.total || 0);
+  const deliveryFee = Number(order?.delivery_fee_amount || 0);
+  const deliveryPayer = String(order?.delivery_payer || '').trim();
+  const payable = productTotal + (deliveryPayer === 'customer' ? deliveryFee : 0);
+  return Math.max(0, Math.round(payable * 100) / 100);
 }
 
 function parseGatewayAmountMinor(amount) {
@@ -323,6 +344,15 @@ async function initiateLahzaTransaction({ req, paymentId, amount, customer, refe
   const mobile = normalizePhoneNumber(customer?.phone);
   if (mobile) payload.mobile = mobile;
 
+  console.info('Lahza initialize amount:', {
+    provider: 'Lahza',
+    paymentId,
+    reference: paymentReference,
+    amountMajor: Number(amount),
+    amountMinor,
+    currency: payload.currency
+  });
+
   const initializeUrl = getLahzaInitializeUrl(settings);
   const response = await fetch(initializeUrl, {
     method: 'POST',
@@ -349,7 +379,10 @@ async function initiateLahzaTransaction({ req, paymentId, amount, customer, refe
   return {
     redirectUrl,
     reference: String(data?.data?.reference || paymentReference),
-    raw: data
+    raw: data,
+    amountMajor: Number(amount),
+    amountMinor,
+    currency: payload.currency
   };
 }
 
@@ -442,35 +475,41 @@ async function createOrderFromDraftWithConnection(conn, payload) {
 
   const { orderItems, subtotal, tax, shipping, total } = await buildOrderSummary({ items });
 
+  const orderColumns = ['customer_name', 'customer_phone', 'customer_email', 'address_line1', 'address_line2', 'city', 'state', 'country', 'postal_code', 'notes', 'subtotal', 'tax', 'shipping', 'total', 'status'];
+  const orderValues = [
+    customer.name,
+    customer.phone,
+    customer.email || null,
+    address.line1,
+    address.line2 || null,
+    address.city,
+    address.state,
+    address.country,
+    address.postalCode || null,
+    notes || null,
+    subtotal,
+    tax,
+    shipping,
+    total,
+    'pending_payment'
+  ];
+  if (await hasOrderColumn('source')) {
+    orderColumns.unshift('source');
+    orderValues.unshift('store');
+  }
+
   const [orderResult] = await conn.query(
-    `INSERT INTO orders (customer_name, customer_phone, customer_email, address_line1, address_line2, city, state, country, postal_code, notes, subtotal, tax, shipping, total, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      customer.name,
-      customer.phone,
-      customer.email || null,
-      address.line1,
-      address.line2 || null,
-      address.city,
-      address.state,
-      address.country,
-      address.postalCode || null,
-      notes || null,
-      subtotal,
-      tax,
-      shipping,
-      total,
-      'pending_payment'
-    ]
+    `INSERT INTO orders (${orderColumns.join(', ')}) VALUES (${orderColumns.map(() => '?').join(', ')})`,
+    orderValues
   );
 
   const orderId = orderResult.insertId;
 
   for (const item of orderItems) {
     await conn.query(
-      `INSERT INTO order_items (order_id, product_id, product_name, color_name, color_hex, quantity, unit_price, line_total)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [orderId, item.productId, item.name, item.colorName, item.colorHex, item.quantity, item.unitPrice, item.lineTotal]
+      `INSERT INTO order_items (order_id, product_id, product_name, color_name, color_hex, variant_id, size_name, quantity, unit_price, purchase_price, line_total)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [orderId, item.productId, item.name, item.colorName, item.colorHex, item.variantId, item.sizeName, item.quantity, item.unitPrice, item.purchasePrice, item.lineTotal]
     );
   }
 
@@ -565,9 +604,6 @@ export async function finalizePaidPaymentTransaction({ conn, paymentId, verified
 
     if (payment.order_id) {
       finalOrderId = payment.order_id;
-      const [existingItems] = await conn.query(`SELECT ${ORDER_ITEM_SELECT_FIELDS} FROM order_items WHERE order_id = ?`, [finalOrderId]);
-      await reserveStock(conn, existingItems);
-
       await conn.query(
         'UPDATE orders SET status = ? WHERE id = ?',
         ['paid', finalOrderId]
@@ -678,13 +714,13 @@ router.post('/initiate', async (req, res) => {
 
     if (orderId) {
       const [orders] = await pool.query(
-        'SELECT id, total, customer_email, customer_phone, customer_name FROM orders WHERE id = ?',
+        'SELECT id, total, delivery_fee_amount, delivery_payer, customer_email, customer_phone, customer_name FROM orders WHERE id = ?',
         [orderId]
       );
       const order = orders[0];
       if (!order) return res.status(404).json({ error: 'Order not found' });
 
-      amount = Number(order.total) || 0;
+      amount = calculatePaymentAmount(order);
       customerPayload = {
         email: order.customer_email,
         phone: order.customer_phone,
@@ -707,15 +743,14 @@ router.post('/initiate', async (req, res) => {
         return res.status(400).json({ error: 'reCAPTCHA verification failed' });
       }
 
-      await validateCustomerAddress(customer?.address);
-      const summary = await buildOrderSummary({ items });
-      amount = Number(summary.total) || 0;
+      const created = await createOrderFromDraft({ customer, items, notes });
+      amount = Number(created.order?.total) || 0;
       customerPayload = customer;
 
       const [result] = await pool.query(
         `INSERT INTO payments (order_id, amount, status, order_payload)
          VALUES (?, ?, ?, ?)`,
-        [null, amount, 'initiated', JSON.stringify({ customer, items, notes })]
+        [created.order.id, amount, 'initiated', JSON.stringify({ customer, items, notes })]
       );
       paymentId = result.insertId;
     }
@@ -751,7 +786,16 @@ router.post('/initiate', async (req, res) => {
 
       await pool.query(
         'UPDATE payments SET transaction_id = ?, raw_response = ? WHERE id = ?',
-        [initiated.reference, stringifyJson(initiated.raw), paymentId]
+        [
+          initiated.reference,
+          stringifyJson(buildLahzaAuditRawResponse(initiated.raw, {
+            amountMajor: initiated.amountMajor,
+            amountMinor: initiated.amountMinor,
+            currency: initiated.currency,
+            reference: initiated.reference
+          })),
+          paymentId
+        ]
       );
 
       return res.json({

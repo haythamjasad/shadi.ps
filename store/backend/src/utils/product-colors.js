@@ -1,7 +1,8 @@
 import pool from '../db.js';
 
 const schemaState = {
-  ready: false
+  ready: false,
+  promise: null
 };
 
 function normalizeHex(value) {
@@ -45,14 +46,23 @@ export function parseProductColorOptions(value) {
 
 export async function ensureProductColorSchema() {
   if (schemaState.ready) return;
+  if (schemaState.promise) return schemaState.promise;
 
-  try {
-    await pool.query('ALTER TABLE products ADD COLUMN color_options JSON NULL AFTER categories');
-  } catch {
-    // column already exists
-  }
+  schemaState.promise = (async () => {
+    try {
+      await pool.query('ALTER TABLE products ADD COLUMN color_options JSON NULL AFTER categories');
+    } catch {
+      // column already exists
+    }
 
-  schemaState.ready = true;
+    schemaState.ready = true;
+    schemaState.promise = null;
+  })().catch((error) => {
+    schemaState.promise = null;
+    throw error;
+  });
+
+  return schemaState.promise;
 }
 
 export function resolveSelectedColor(colorOptions, input) {

@@ -1,52 +1,71 @@
+# Environment and secrets
 .env
 .env.*
 !.env.example
 !.env.production.example
+env
+mailpass
+*.pem
+*.key
+*.crt
 
 # Dependencies
 node_modules/
+vendor/
+.venv/
 
 # Build output
 dist/
 build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# TypeScript build state
-*.tsbuildinfo
+# Local databases, dumps, backups, and spreadsheets
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+*.xlsx
+*.xls
+backups/
+db-backups/
+exports/
 
-# Archives and local tooling
+# Archives and deploy bundles
+*.zip
+*.tar
+*.tar.gz
 archive/
+cpanel-deploy/
+cpanel-*build*/
+
+# Runtime uploads and generated media
+uploads/
+**/uploads/
+**/order-email-pdfs/
+**/reel_thumbnails/
+**/videos/
+
+# Local tooling and cache
 .agents/
 skills-lock.json
-mailpass
+.cache/
+.parcel-cache/
+.vite/
 
 # OS/editor files
 .DS_Store
 Thumbs.db
-
-# Local archives, backups, and dumps at repo root
-/assets.zip
-/backend.zip
-/frontend.zip
-/backups/
-/db-backups/
-/cpanel-hotfix/
-/transactions.sql
-/Pasted image.png
-/Sample 01.pdf
-/Sample 02.pdf
-/Sample 03.pdf
-/Sample 04.pdf
-/Sample 05.pdf
-/Sample 6.pdf
-/Sample 1.jpg
-/Sample2.jpg
-/Sample 3.jpg
-/Sample 4.jpg
-/Sample 5.jpg
-/Sample 6.jpg
+*.swp
+*.swo

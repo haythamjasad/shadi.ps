@@ -42,7 +42,8 @@ test('applyProductImportAnalysis rolls back the transaction when image persisten
       is_available: true,
       is_hidden: false,
       show_on_home: false,
-      image_url: 'data:image/png;base64,AAAA',
+      imageSource: 'data:image/png;base64,AAAA',
+      imageProvided: true,
       embeddedImage: ''
     }]
   };

@@ -16,6 +16,7 @@ export interface LocationItem {
 
 export interface AddTransactionPayload {
   name: string;
+  email: string;
   phone: string;
   notes: string;
   selectedServices: ServiceTypeItem[];

@@ -51,7 +51,9 @@ const Snackbar = () => {
           action={alertAction}
         >
           {title && <AlertTitle>{title}</AlertTitle>}
-          {message ? t(`SnackbarMessages.${message}`) : ""}
+          {message
+            ? t(`SnackbarMessages.${message}`, { defaultValue: message })
+            : ""}
         </Alert>
       </MuiSnackbar>
     </Stack>

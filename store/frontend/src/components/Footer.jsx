@@ -6,9 +6,9 @@ import mastercardIcon from '../assets/mastercard.png';
 
 const Footer = () => {
   return (
-    <footer className="bg-[#d9d9de] pt-0 pb-5 md:pt-0 md:pb-0">
+    <footer className="bg-white pt-0 pb-0">
       <div className="w-full">
-        <div className="relative mb-[30px] flex flex-col items-center justify-between gap-4 overflow-hidden bg-white px-3 pt-3 pb-5 shadow-[0_16px_40px_rgba(0,0,0,0.08)] md:mb-0 md:flex-row md:items-start md:gap-6 md:px-8 md:pt-8 md:pb-12 md:shadow-[0_24px_60px_rgba(0,0,0,0.12)]">
+        <div className="relative mb-0 flex flex-col items-center justify-between gap-4 overflow-hidden bg-white px-3 pt-3 pb-5 shadow-[0_16px_40px_rgba(0,0,0,0.08)] md:flex-row md:items-start md:gap-6 md:px-8 md:pt-8 md:pb-12 md:shadow-[0_24px_60px_rgba(0,0,0,0.12)]">
           <div className="absolute bottom-0 left-0 right-0 h-3 bg-[#F89C1C] md:hidden" />
           <div className="absolute bottom-3 left-0 right-0 h-1.5 bg-[#1f1f27] md:hidden" />
           <div className="absolute bottom-0 left-0 h-12 w-28 rounded-tr-[36px] bg-[#1f1f27] md:hidden" />

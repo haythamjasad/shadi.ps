@@ -9,16 +9,17 @@ import {
   DialogTitle,
   Drawer,
   Stack,
-  Typography,
 } from "@mui/material";
 import { ClipboardClock, HandCoins, Menu, Store } from "lucide-react";
 import { FC, useState } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { Trans } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { navItems } from "./constants";
-import { StyledMenuItem, StyledToolbar } from "./StyledElements";
+import { StyledToolbar } from "./StyledElements";
 import styles from "./styles.module.css";
-import fullLogo from "@/assets/images/logo-2.png";
+import sharaNavLabel from "@/assets/images/shara-nav-label-new.png";
+import storeNavLabel from "@/assets/images/store-nav-label-new.png";
+import consultingNavLabel from "@/assets/images/consulting-nav-label-new.png";
+import homeNavLabel from "@/assets/images/Shadi.png";
 import AddChargeForm from "@/pages/Home/components/AddChargeForm";
 
 const navActionButtonSx = {
@@ -45,7 +46,6 @@ const visitStoreButtonSx = {
 };
 
 const Navbar: FC = () => {
-  const { t } = useTranslation("translation");
   const storeUrl = "https://store.shadi.ps";
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -53,6 +53,7 @@ const Navbar: FC = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const isConsultingPage = location.pathname === "/consulting";
 
   const toggleDrawer = (newIsOpen: boolean) => () => {
     setIsDrawerOpen(newIsOpen);
@@ -95,36 +96,46 @@ const Navbar: FC = () => {
     goToConsultingPage("appointment_form");
   };
 
-  const renderNavigationsItems = navItems.map((item) => (
-    <StyledMenuItem key={item} onClick={() => scrollToSection(item)}>
-      <Typography variant="h6" color="text.primary">
-        {t(`NavItems.${item}`)}
-      </Typography>
-    </StyledMenuItem>
-  ));
+  const drawerNavItems = [
+    { key: "about_us", label: "الشركة" },
+    { key: "founder_profile", label: "المؤسس" },
+    { key: "our_services", label: "الخدمات" },
+  ];
 
-  const renderDrawerNavigationButtons = navItems.map((item) => (
-    <Button
-      key={item}
-      variant="contained"
-      size="small"
-      onClick={() => scrollToSection(item)}
-      fullWidth
-      sx={{
-        ...navActionButtonSx,
-        width: "100%",
-        fontSize: { xs: "0.85rem", sm: "0.875rem" },
-        fontWeight: 700,
-        justifyContent: "center",
-        textAlign: "center",
-        display: "flex",
-        alignSelf: "stretch",
-        direction: "rtl",
-      }}
-    >
-      {t(`NavItems.${item}`)}
-    </Button>
-  ));
+  const renderDrawerNavigationButtons = (
+    <Stack direction="column" spacing={1.2} alignItems="stretch">
+      {drawerNavItems.map((item) => (
+        <Button
+          key={item.key}
+          variant="outlined"
+          size="small"
+          onClick={() => scrollToSection(item.key)}
+          fullWidth
+          sx={{
+            width: "100%",
+            minHeight: 44,
+            borderRadius: 999,
+            borderColor: "#e59616",
+            backgroundColor: "#f8a01b",
+            boxShadow: "0 8px 18px rgba(248,160,27,0.18)",
+            color: "#000",
+            fontSize: { xs: "0.9rem", sm: "0.95rem" },
+            fontWeight: 800,
+            justifyContent: "center",
+            textAlign: "center",
+            direction: "rtl",
+            "&:hover": {
+              borderColor: "#e59616",
+              backgroundColor: "#f6a21f",
+              boxShadow: "0 10px 22px rgba(248,160,27,0.22)",
+            },
+          }}
+        >
+          {item.label}
+        </Button>
+      ))}
+    </Stack>
+  );
 
   return (
     <AppBar
@@ -136,26 +147,146 @@ const Navbar: FC = () => {
       }}
     >
       <Container sx={{ maxWidth: "1850px !important" }}>
-        <StyledToolbar variant="regular">
-          <Stack direction="row" flexGrow={1} ml={-1}>
-            <Link
-              to="/"
-              onClick={() => scrollToSection("home_top_section")}
+        <StyledToolbar
+          variant="regular"
+          sx={(theme) => ({
+            [theme.breakpoints.up("md")]: {
+              position: "relative",
+              paddingRight: "15px",
+              paddingLeft: "15px",
+              minHeight: "64px",
+              maxHeight: "64px",
+            },
+            [theme.breakpoints.down("md")]: {
+              direction: "ltr",
+              px: 0.4,
+              minHeight: 46,
+              maxHeight: 56,
+            },
+          })}
+        >
+          <Stack
+            direction="row"
+            flexGrow={1}
+            alignItems="center"
+            sx={{
+              display: { xs: "none", md: "flex" },
+              width: "100%",
+              direction: "ltr",
+            }}
+          >
+            <Box
+              style={{
+                position: "absolute",
+                left: 15,
+                top: "50%",
+                transform: "translateY(-50%)",
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "row",
+                direction: "ltr",
+                gap: 12,
+              }}
             >
-              <img
-                src={fullLogo}
-                width="32px"
-                alt="logo of shadi shirri"
-                style={{ marginInlineStart: "10px", marginBlockStart: "5px" }}
-              />
-            </Link>
-            <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1, px: 3 }}>
-              {renderNavigationsItems}
+              {!isConsultingPage && (
+                <Button
+                  variant="outlined"
+                  onClick={() => window.open("https://www.shadi.ps/consulting#appointment_form", "_blank", "noopener,noreferrer")}
+                  sx={{
+                    minWidth: 128,
+                    minHeight: 46,
+                    borderRadius: 999,
+                    borderColor: "rgba(0,0,0,0.08)",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    boxShadow: "0 8px 18px rgba(30,30,40,0.08)",
+                    px: 2.5,
+                    "&:hover": { backgroundColor: "#fff", borderColor: "rgba(0,0,0,0.12)" },
+                  }}
+                >
+                  <Box component="img" src={consultingNavLabel} alt="إستشارة" sx={{ height: 24, maxWidth: 96, objectFit: "contain" }} />
+                </Button>
+              )}
+              <Button
+                variant="outlined"
+                component="a"
+                href={storeUrl}
+                target="_blank"
+                rel="noreferrer"
+                sx={{
+                  minWidth: 128,
+                  minHeight: 46,
+                  borderRadius: 999,
+                  borderColor: "rgba(0,0,0,0.08)",
+                  backgroundColor: "rgba(255,255,255,0.92)",
+                  boxShadow: "0 8px 18px rgba(30,30,40,0.08)",
+                  px: 2.5,
+                  "&:hover": { backgroundColor: "#fff", borderColor: "rgba(0,0,0,0.12)" },
+                }}
+              >
+                <Box component="img" src={storeNavLabel} alt="المتجر" sx={{ height: 24, maxWidth: 82, objectFit: "contain" }} />
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => window.open("https://shara.shadi.ps", "_blank", "noopener,noreferrer")}
+                sx={{
+                  minWidth: 128,
+                  minHeight: 46,
+                  borderRadius: 999,
+                  borderColor: "rgba(0,0,0,0.08)",
+                  backgroundColor: "rgba(255,255,255,0.92)",
+                  boxShadow: "0 8px 18px rgba(30,30,40,0.08)",
+                  px: 2.5,
+                  "&:hover": { backgroundColor: "#fff", borderColor: "rgba(0,0,0,0.12)" },
+                }}
+              >
+                <Box component="img" src={sharaNavLabel} alt="شعرة" sx={{ height: 24, maxWidth: 96, objectFit: "contain" }} />
+              </Button>
+              {isConsultingPage && (
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate("/")}
+                  sx={{
+                    minWidth: 128,
+                    minHeight: 46,
+                    borderRadius: 999,
+                    borderColor: "rgba(0,0,0,0.08)",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    boxShadow: "0 8px 18px rgba(30,30,40,0.08)",
+                    px: 2.5,
+                    "&:hover": { backgroundColor: "#fff", borderColor: "rgba(0,0,0,0.12)" },
+                  }}
+                >
+                  <Box component="img" src={homeNavLabel} alt="الرئيسية" sx={{ height: 24, maxWidth: 82, objectFit: "contain" }} />
+                </Button>
+              )}
+            </Box>
+            <Box
+              style={{
+                position: "absolute",
+                right: 6,
+                top: "50%",
+                transform: "translateY(-50%)",
+              }}
+            >
+              <Link to="/" onClick={() => scrollToSection("home_top_section")}>
+                <Box
+                  component="img"
+                  src="/circle_logo_footer.png"
+                  alt="logo of shadi shirri"
+                  sx={{
+                    display: "block",
+                    width: 50,
+                    height: 50,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
+              </Link>
             </Box>
           </Stack>
           <Box
             sx={{
-              display: { xs: "none", md: "flex" },
+              display: "none",
               alignItems: "center",
               gap: 1.5,
               width: "450px",
@@ -230,64 +361,172 @@ const Navbar: FC = () => {
               </Trans>
             </Button>
           </Box>
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={1}
-            sx={{ display: { xs: "flex", md: "none" } }}
-          >
-            <Button
-              variant="contained"
-              size="small"
-              component="a"
-              href={storeUrl}
-              target="_blank"
-              rel="noreferrer"
-              endIcon={<Store size={18} />}
+          <Box sx={{ display: { xs: "flex", md: "none" }, width: "100%", direction: "ltr" }}>
+            <Box
               sx={{
-                ...visitStoreButtonSx,
-                minHeight: 42,
-                minWidth: "fit-content",
-                px: 1.5,
-                py: 0.75,
-                whiteSpace: "nowrap",
-                fontSize: "0.8rem",
-                lineHeight: 1,
-                display: "inline-flex",
+                width: "100%",
+                minHeight: 46,
+                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                "& .MuiButton-endIcon": {
-                  marginInlineStart: "6px",
-                  marginInlineEnd: 0,
+                justifyContent: "space-between",
+                gap: 0.25,
+                px: 0,
+                py: 0,
+                direction: "ltr",
+              }}
+            >
+              <Link
+                to="/"
+                onClick={() => scrollToSection("home_top_section")}
+                style={{ display: "flex", alignItems: "center", flexShrink: 0 }}
+              >
+                <Box
+                  component="img"
+                  src="/circle_logo_footer.png"
+                  alt="logo of shadi shirri"
+                  sx={{
+                    display: "block",
+                    borderRadius: "50%",
+                    width: 50,
+                    height: 50,
+                    objectFit: "cover",
+                  }}
+                />
+              </Link>
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) 1px minmax(0, 1fr) 1px minmax(0, 1fr)",
+                  alignItems: "center",
+                  justifyItems: "center",
+                  direction: "ltr",
+                }}
+              >
+                {isConsultingPage ? (
+                  <>
+                    <Button
+                      variant="text"
+                      onClick={() => navigate("/")}
+                      sx={{ width: "100%", minWidth: 0, px: 0.25, py: 0.35 }}
+                    >
+                      <Box
+                        component="img"
+                        src={homeNavLabel}
+                        alt="الرئيسية"
+                        sx={{ display: "block", width: "100%", maxWidth: 60, height: 22, objectFit: "contain" }}
+                      />
+                    </Button>
+                    <Divider orientation="vertical" flexItem sx={{ my: 0.6, borderColor: "#2f2f35" }} />
+                    <Button
+                      variant="text"
+                      onClick={() => window.open("https://shara.shadi.ps", "_blank", "noopener,noreferrer")}
+                      sx={{ width: "100%", minWidth: 0, px: 0.25, py: 0.35 }}
+                    >
+                      <Box
+                        component="img"
+                        src={sharaNavLabel}
+                        alt="شعرة"
+                        sx={{ display: "block", width: "100%", maxWidth: 68, height: 22, objectFit: "contain" }}
+                      />
+                    </Button>
+                    <Divider orientation="vertical" flexItem sx={{ my: 0.6, borderColor: "#2f2f35" }} />
+                    <Button
+                      variant="text"
+                      component="a"
+                      href={storeUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      sx={{ width: "100%", minWidth: 0, px: 0.25, py: 0.35 }}
+                    >
+                      <Box
+                        component="img"
+                        src={storeNavLabel}
+                        alt="المتجر"
+                        sx={{ display: "block", width: "100%", maxWidth: 60, height: 22, objectFit: "contain" }}
+                      />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="text"
+                      onClick={() => window.open("https://shara.shadi.ps", "_blank", "noopener,noreferrer")}
+                      sx={{ width: "100%", minWidth: 0, px: 0.25, py: 0.35 }}
+                    >
+                      <Box
+                        component="img"
+                        src={sharaNavLabel}
+                        alt="شعرة"
+                        sx={{ display: "block", width: "100%", maxWidth: 68, height: 22, objectFit: "contain" }}
+                      />
+                    </Button>
+                    <Divider orientation="vertical" flexItem sx={{ my: 0.6, borderColor: "#2f2f35" }} />
+                    <Button
+                      variant="text"
+                      component="a"
+                      href={storeUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      sx={{ width: "100%", minWidth: 0, px: 0.25, py: 0.35 }}
+                    >
+                      <Box
+                        component="img"
+                        src={storeNavLabel}
+                        alt="المتجر"
+                        sx={{ display: "block", width: "100%", maxWidth: 60, height: 22, objectFit: "contain" }}
+                      />
+                    </Button>
+                    <Divider orientation="vertical" flexItem sx={{ my: 0.6, borderColor: "#2f2f35" }} />
+                    <Button
+                      variant="text"
+                      onClick={() => window.open("https://www.shadi.ps/consulting#appointment_form", "_blank", "noopener,noreferrer")}
+                      sx={{ width: "100%", minWidth: 0, px: 0.25, py: 0.35 }}
+                    >
+                      <Box
+                        component="img"
+                        src={consultingNavLabel}
+                        alt="إستشارة"
+                        sx={{ display: "block", width: "100%", maxWidth: 78, height: 22, objectFit: "contain" }}
+                      />
+                    </Button>
+                  </>
+                )}
+              </Box>
+              <Button
+                variant="text"
+                color="primary"
+                aria-label="menu"
+                onClick={toggleDrawer(!isDrawerOpen)}
+                sx={{
+                  minWidth: 30,
+                  width: 30,
+                  height: 36,
+                  p: 0,
+                  color: "#3b3b44",
+                  flexShrink: 0,
+                  "&:hover": { backgroundColor: "transparent" },
+                }}
+              >
+                <Menu size={22} strokeWidth={2.4} />
+              </Button>
+            </Box>
+            <Drawer
+              anchor="right"
+              open={isDrawerOpen}
+              onClose={toggleDrawer(false)}
+              ModalProps={{ keepMounted: true }}
+              PaperProps={{
+                sx: {
+                  width: { xs: "82vw", sm: 360 },
+                  maxWidth: 360,
+                  borderTopLeftRadius: 20,
+                  borderBottomLeftRadius: 20,
+                  backgroundColor: "#fff",
                 },
               }}
             >
-              <Trans i18nKey="Buttons.visitStore">Go to Store</Trans>
-            </Button>
-            <Button
-              variant="text"
-              color="primary"
-              aria-label="menu"
-              onClick={toggleDrawer(!isDrawerOpen)}
-              className={styles.menuBtn}
-            >
-              <Menu />
-            </Button>
-              <Drawer
-                anchor="right"
-                open={isDrawerOpen}
-                onClose={toggleDrawer(false)}
-                ModalProps={{ keepMounted: true }}
-                PaperProps={{
-                  sx: {
-                    width: { xs: "82vw", sm: 360 },
-                    maxWidth: 360,
-                    borderTopLeftRadius: 20,
-                    borderBottomLeftRadius: 20,
-                    backgroundColor: "#fff",
-                  },
-                }}
-              >
               <Box
                 p={2}
                 flexGrow={1}
@@ -306,12 +545,18 @@ const Navbar: FC = () => {
                     justifyContent="space-between"
                     alignItems="center"
                   >
-                    <Link to="/">
-                      <img
-                        src={fullLogo}
-                        width="32px"
+                    <Link to="/" onClick={toggleDrawer(false)}>
+                      <Box
+                        component="img"
+                        src="/circle_logo_footer.png"
                         alt="logo of shadi shirri"
-                        style={{}}
+                        sx={{
+                          display: "block",
+                          width: 50,
+                          height: 50,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                        }}
                       />
                     </Link>
                     <Button
@@ -325,65 +570,83 @@ const Navbar: FC = () => {
                       <Menu />
                     </Button>
                   </Stack>
-                  <Stack direction="column" spacing={1.5} alignItems="stretch">
+                  <Stack direction="column" spacing={1.2} alignItems="stretch">
                     <Button
-                      variant="contained"
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        window.open("https://shara.shadi.ps", "_blank", "noopener,noreferrer");
+                        toggleDrawer(false)();
+                      }}
+                      sx={{
+                        width: "100%",
+                        minHeight: 44,
+                        borderRadius: 999,
+                        borderColor: "rgba(0,0,0,0.08)",
+                        backgroundColor: "rgba(255,255,255,0.92)",
+                        boxShadow: "0 8px 18px rgba(30,30,40,0.08)",
+                        py: 0.75,
+                        "&:hover": {
+                          borderColor: "rgba(0,0,0,0.12)",
+                          backgroundColor: "#fff",
+                          boxShadow: "0 10px 22px rgba(30,30,40,0.1)",
+                        },
+                      }}
+                    >
+                      <Box component="img" src={sharaNavLabel} alt="شعرة" sx={{ height: 24, maxWidth: 96, objectFit: "contain" }} />
+                    </Button>
+                    <Button
+                      variant="outlined"
                       size="small"
                       component="a"
                       href={storeUrl}
                       target="_blank"
                       rel="noreferrer"
-                      endIcon={<Store size={20} />}
                       sx={{
-                        ...visitStoreButtonSx,
                         width: "100%",
                         minHeight: 44,
-                        borderRadius: 4,
-                        fontSize: { xs: "0.85rem", sm: "0.875rem" },
-                        fontWeight: 700,
+                        borderRadius: 999,
+                        borderColor: "rgba(0,0,0,0.08)",
+                        backgroundColor: "rgba(255,255,255,0.92)",
+                        boxShadow: "0 8px 18px rgba(30,30,40,0.08)",
                         py: 0.75,
+                        "&:hover": {
+                          borderColor: "rgba(0,0,0,0.12)",
+                          backgroundColor: "#fff",
+                          boxShadow: "0 10px 22px rgba(30,30,40,0.1)",
+                        },
                       }}
                     >
-                      <Trans i18nKey="Buttons.visitStore">Go to Store</Trans>
+                      <Box component="img" src={storeNavLabel} alt="المتجر" sx={{ height: 24, maxWidth: 86, objectFit: "contain" }} />
                     </Button>
                     <Button
-                      variant="contained"
+                      variant="outlined"
                       size="small"
-                      onClick={() => {
-                        setIsAddChargeFormOpen(true);
+                      onClick={isConsultingPage ? () => {
+                        navigate("/");
                         toggleDrawer(false)();
-                      }}
-                      endIcon={<HandCoins size={20} />}
+                      } : handleBookAppointment}
                       sx={{
-                        ...navActionButtonSx,
                         width: "100%",
                         minHeight: 44,
-                        borderRadius: 4,
-                        fontSize: { xs: "0.85rem", sm: "0.875rem" },
-                        fontWeight: 700,
+                        borderRadius: 999,
+                        borderColor: "rgba(0,0,0,0.08)",
+                        backgroundColor: "rgba(255,255,255,0.92)",
+                        boxShadow: "0 8px 18px rgba(30,30,40,0.08)",
                         py: 0.75,
+                        "&:hover": {
+                          borderColor: "rgba(0,0,0,0.12)",
+                          backgroundColor: "#fff",
+                          boxShadow: "0 10px 22px rgba(30,30,40,0.1)",
+                        },
                       }}
                     >
-                      <Trans i18nKey="Buttons.addPayment">Add Payment</Trans>
-                    </Button>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={handleBookAppointment}
-                      endIcon={<ClipboardClock size={20} />}
-                      sx={{
-                        ...navActionButtonSx,
-                        width: "100%",
-                        minHeight: 44,
-                        borderRadius: 4,
-                        fontSize: { xs: "0.85rem", sm: "0.875rem" },
-                        fontWeight: 700,
-                        py: 0.75,
-                      }}
-                    >
-                      <Trans i18nKey="Buttons.book_consultation">
-                        Book Consultation
-                      </Trans>
+                      <Box
+                        component="img"
+                        src={isConsultingPage ? homeNavLabel : consultingNavLabel}
+                        alt={isConsultingPage ? "الرئيسية" : "إستشارة"}
+                        sx={{ height: 24, maxWidth: isConsultingPage ? 82 : 96, objectFit: "contain" }}
+                      />
                     </Button>
                   </Stack>
                   <Divider sx={{ my: 1.5, borderColor: "#000000" }} />
@@ -393,7 +656,7 @@ const Navbar: FC = () => {
                 </Stack>
               </Box>
             </Drawer>
-          </Stack>
+          </Box>
         </StyledToolbar>
       </Container>
       <Dialog

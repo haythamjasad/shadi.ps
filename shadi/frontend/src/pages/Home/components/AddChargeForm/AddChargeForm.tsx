@@ -10,10 +10,11 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { Trans } from "react-i18next";
 import * as yup from "yup";
 import theme from "@/style/theme";
+import { shouldEnableRecaptcha } from "@/utils/recaptcha";
 import PoliciesSection from "../AppointmentForm/components/PoliciesSection";
 import { AddChargeFormProps } from "./types";
 
-const recaptchaEnabled = import.meta.env.PROD && !!import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+const recaptchaEnabled = shouldEnableRecaptcha();
 
 const AddChargeForm: FC<AddChargeFormProps> = ({ setIsAddChargeFormOpen }) => {
   const recaptchaRef = useRef<ReCAPTCHA>(null);

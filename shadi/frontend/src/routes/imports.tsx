@@ -10,5 +10,6 @@ export const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 export const Transactions = lazy(() => import("@/pages/Transactions"));
 export const JoinRequests = lazy(() => import("@/pages/JoinRequests"));
 export const Home = lazy(() => import("@/pages/Home"));
+export const Shara = lazy(() => import("@/pages/Shara"));
 export const PublicTransactions = lazy(() => import("@/pages/PublicTransactions"));
 export const PaymentStatus = lazy(() => import("@/pages/PaymentStatus"));

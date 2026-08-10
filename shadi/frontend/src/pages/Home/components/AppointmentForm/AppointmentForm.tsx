@@ -4,13 +4,13 @@ import useAddTransaction from "@/services/Transactions/useAddTransaction";
 import { LoadingButton } from "@mui/lab";
 import {
   alpha,
+  Box,
   Card,
+  FormHelperText,
   Grid2,
   Paper,
   Stack,
   Typography,
-  FormHelperText,
-  Box,
 } from "@mui/material";
 import { Form, FormikProvider, useFormik } from "formik";
 import { CircleDollarSign } from "lucide-react";
@@ -33,6 +33,9 @@ const AppointmentForm: FC = () => {
     "& .MuiOutlinedInput-root": {
       backgroundColor: "#ffffff",
       color: "inherit",
+      "& .MuiOutlinedInput-input": {
+        fontSize: { xs: "16px", md: "1rem" },
+      },
       "& fieldset": {
         borderColor: alpha(accentColor, 0.35),
       },
@@ -52,7 +55,7 @@ const AppointmentForm: FC = () => {
   };
 
   const onSubmit = (values: AddTransactionPayload) => {
-    const { selectedLocation, selectedServices, name, phone, notes } = values;
+    const { selectedLocation, selectedServices, name, email, phone, notes } = values;
     const cost = selectedServices.reduce(
       (total, service) =>
         total +
@@ -61,6 +64,7 @@ const AppointmentForm: FC = () => {
     );
     addTransaction({
       name,
+      email,
       phone,
       notes,
       location: selectedLocation.value,
@@ -95,12 +99,17 @@ const AppointmentForm: FC = () => {
   }, [isAddSuccess, resetForm]);
 
   return (
-    <SectionContainer id="appointment_form" py={0} px={0}>
+    <SectionContainer
+      id="appointment_form"
+      py={0}
+      px={0}
+      sx={{ pt: { xs: 1, md: 2 } }}
+    >
       <Stack
         spacing={2}
         justifyContent="center"
         alignItems="center"
-        pt={{ xs: 4, md: 2 }}
+        pt={{ xs: 1, md: 1.5 }}
         pb={2}
       >
         <Typography
@@ -109,16 +118,18 @@ const AppointmentForm: FC = () => {
             fontSize: { xs: "14pt", md: "34pt" },
             fontWeight: "bold",
             color: logoColor,
+            textAlign: "center",
           })}
         >
-          حجز استشارة
+          حجز الاستشارة
         </Typography>
         <Card
           sx={{
-            width: "100%",
+            width: { xs: "90%", md: "85%" },
             maxWidth: 1180,
             borderRadius: 4,
-            p: { xs: 2, md: 3 },
+            mx: "auto",
+            p: { xs: 2.25, md: 3 },
             border: `1px solid ${alpha(accentColor, 0.25)}`,
             background: cardBg,
             boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
@@ -211,51 +222,57 @@ const AppointmentForm: FC = () => {
                   />
                 </Grid2>
 
-                {/* Privacy Policy Section + Recaptcha */}
+                <Grid2 size={{ xs: 12 }}>
+                  <Box
+                    sx={{
+                      "& .MuiAccordion-root": {
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                      },
+                      "& .MuiAccordionDetails-root": {
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                      },
+                      minWidth: 0,
+                      mt: 0.5,
+                    }}
+                  >
+                    <PoliciesSection
+                      transparency={0.12}
+                      agreed={values.privacyPolicyAgreed}
+                      onChange={(checked) => {
+                        formikProps.setFieldValue(
+                          "privacyPolicyAgreed",
+                          checked,
+                        );
+                      }}
+                      error={formikProps.errors.privacyPolicyAgreed}
+                      touched={formikProps.touched.privacyPolicyAgreed}
+                    />
+                  </Box>
+                </Grid2>
                 <Grid2 size={{ xs: 12 }}>
                   <Stack
-                    direction={{ xs: "column", md: "row" }}
+                    direction="row"
+                    justifyContent="flex-start"
+                    alignItems="center"
                     spacing={2}
-                    alignItems="stretch"
-                    sx={{ mt: 0.5, mb: 1 }}
+                    sx={{ mt: 1.5 }}
                   >
-                    <Box
-                      sx={{
-                        flex: 1,
-                        "& .MuiAccordion-root": {
-                          height: "100%",
-                          display: "flex",
-                          flexDirection: "column",
-                        },
-                        "& .MuiAccordionDetails-root": {
-                          flex: 1,
-                          display: "flex",
-                          flexDirection: "column",
-                        },
-                        minWidth: 0,
-                      }}
-                    >
-                      <PoliciesSection
-                        transparency={0.12}
-                        agreed={values.privacyPolicyAgreed}
-                        onChange={(checked) => {
-                          formikProps.setFieldValue(
-                            "privacyPolicyAgreed",
-                            checked,
-                          );
-                        }}
-                        error={formikProps.errors.privacyPolicyAgreed}
-                        touched={formikProps.touched.privacyPolicyAgreed}
-                      />
-                    </Box>
                     {recaptchaEnabled && (
                       <Box
                         sx={{
-                          minWidth: { md: 320 },
+                          width: "100%",
+                          minWidth: { xs: "100%", md: 302 },
                           display: "flex",
                           flexDirection: "column",
-                          justifyContent: "flex-end",
-                          mt: { xs: 1, md: 0 },
+                          alignItems: "flex-end",
+                          "& > div": {
+                            transform: { xs: "scale(0.82)", md: "none" },
+                            transformOrigin: "right top",
+                          },
                         }}
                       >
                         <ReCAPTCHA
@@ -287,14 +304,16 @@ const AppointmentForm: FC = () => {
                     spacing={1.5}
                     alignItems="center"
                     justifyContent="flex-end"
+                    flexWrap="wrap"
+                    useFlexGap
                   >
                     <Paper
                       elevation={0}
                       sx={{
-                        px: 2,
-                        py: 1,
+                        px: { xs: 1.25, md: 2 },
+                        py: { xs: 0.75, md: 1 },
                         borderRadius: "4px",
-                        minWidth: 200,
+                        minWidth: { xs: 160, md: 200 },
                         backgroundColor: "#ffffff",
                         border: "1px solid rgba(248, 159, 50, 0.35)",
                         boxShadow: "none",
@@ -330,10 +349,11 @@ const AppointmentForm: FC = () => {
                       variant="contained"
                       endIcon={<CircleDollarSign />}
                       sx={{
-                        minWidth: "140px",
+                        minWidth: { xs: "110px", md: "140px" },
                         borderRadius: "4px",
                         border: "1px solid rgba(248, 159, 50, 0.35)",
                         boxShadow: "none",
+                        fontSize: { xs: "0.95rem", md: "1rem" },
                         "&:hover": {
                           boxShadow: "none",
                           border: "1px solid rgba(248, 159, 50, 1)",

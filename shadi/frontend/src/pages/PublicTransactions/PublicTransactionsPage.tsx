@@ -1,16 +1,54 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/NavbarV2";
 import routeHOC from "@/routes/HOCs/routeHOC";
-import { alpha, Box, Stack, Typography } from "@mui/material";
-import { FC, useEffect } from "react";
+import { alpha, Box, Stack } from "@mui/material";
+import { FC, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AppointmentForm from "@/pages/Home/components/AppointmentForm/AppointmentForm";
 import ConsultationReports from "@/pages/Home/components/ConsultationReports";
 import SectionContainer from "@/pages/Home/components/UI/SectionContainer";
-import { logoColor } from "@/style/colors";
+
+function resolveStoreApi(): string {
+  const configured = String(import.meta.env.VITE_STORE_API_URL || "").trim().replace(/\/+$/, "");
+  if (typeof window === "undefined") return configured || "http://localhost:4000/api/v01";
+
+  const pageHost = window.location.hostname;
+  if (pageHost === "www.shadi.ps" || pageHost === "shadi.ps") return "https://store.shadi.ps/api/v01";
+
+  if (configured) {
+    try {
+      const url = new URL(configured);
+      if (!["localhost", "127.0.0.1", "::1"].includes(url.hostname)) return configured;
+    } catch {
+      return configured;
+    }
+  }
+
+  return `${window.location.protocol}//${pageHost}:4000/api/v01`;
+}
+
+const STORE_API = resolveStoreApi();
+const DEFAULT_CONSULTING_BANNER_PATH = "/api/v01/uploads/banners/shadi-banner-1780762420058-1h7x5e.jpg";
+
+function resolveBannerUrl(path: string): string {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const base = STORE_API.replace(/\/api\/v01\/?$/, "").replace(/\/+$/, "");
+  return `${base}${path}`;
+}
 
 const PublicTransactionsPage: FC = () => {
   const location = useLocation();
+  const [bannerUrl, setBannerUrl] = useState(() => resolveBannerUrl(DEFAULT_CONSULTING_BANNER_PATH));
+
+  useEffect(() => {
+    fetch(`${STORE_API}/settings/banner/shadi`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.image_url) setBannerUrl(resolveBannerUrl(data.image_url));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const hash = location.hash.replace(/^#/, "");
@@ -55,31 +93,38 @@ const PublicTransactionsPage: FC = () => {
           py={0}
           sx={{
             minHeight: { xs: "auto", md: "auto" },
-            pt: { xs: 12, sm: 12, md: 12, lg: 14 },
+            pt: { xs: 12, sm: 12.5, md: 14.5, lg: 14.5 },
+            px: { xs: 0, sm: 3, md: 5 },
           }}
         >
-          <Stack spacing={2} alignItems="center" textAlign="center" pb={{ xs: 2, md: 4 }}>
-            <Typography
-              sx={{
-                color: logoColor,
-                width: "100%",
-                fontSize: { xs: "18pt", md: "38pt" },
-                fontWeight: "bold",
-              }}
+          <Stack spacing={{ xs: 0.75, md: 1.25 }} alignItems="center" textAlign="center" pb={{ xs: 0, md: 1.5 }}>
+            <Box
+              sx={(theme) => ({
+                width: { xs: "calc(100vw - 32px)", sm: "100%" },
+                maxWidth: 1260,
+                overflow: "hidden",
+                borderRadius: { xs: 2.25, md: 2 },
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
+                boxShadow: {
+                  xs: "0 12px 28px rgba(90, 59, 37, 0.12)",
+                  md: "0 18px 48px rgba(90, 59, 37, 0.16)",
+                },
+                backgroundColor: theme.palette.background.paper,
+              })}
             >
-              الاستشارات
-            </Typography>
-            <Typography
-              color="text.secondary"
-              sx={{
-                width: "100%",
-                maxWidth: "720px",
-                textAlign: "center",
-                fontSize: { xs: "10pt", md: "14pt" },
-              }}
-            >
-              احجز استشارة هندسية.
-            </Typography>
+              <Box
+                component="img"
+                src={bannerUrl}
+                alt="الاستشارات"
+                sx={{
+                  display: "block",
+                  width: "100%",
+                  height: "auto",
+                  objectFit: "contain",
+                  objectPosition: "center",
+                }}
+              />
+            </Box>
           </Stack>
         </SectionContainer>
 

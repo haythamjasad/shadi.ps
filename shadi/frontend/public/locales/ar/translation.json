@@ -2,7 +2,7 @@
   "Buttons": {
     "login": "تسجيل الدخول",
     "logout": "تسجيل الخروج",
-    "book_consultation": "حجز استشارة",
+    "book_consultation": "حجز الاستشارة",
     "pay": "ادفع",
     "forgetPassword": "نسيت كلمة المرور؟",
     "sendCode": "إرسال الرمز",

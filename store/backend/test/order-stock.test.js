@@ -2,17 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { reserveStockForItems } from '../src/utils/order.js';
 
-test('reserveStockForItems aggregates duplicate product rows before updating stock', async () => {
+test('reserveStockForItems does not query or update stock for duplicate product rows', async () => {
   const calls = [];
   const conn = {
     async query(sql, params) {
       calls.push({ sql, params });
-      if (sql.includes('SELECT id, name, stock FROM products')) {
-        return [[
-          { id: 1, name: 'Pipe', stock: 5 },
-          { id: 2, name: 'Valve', stock: 3 }
-        ]];
-      }
       return [{ affectedRows: 1 }];
     }
   };
@@ -23,23 +17,23 @@ test('reserveStockForItems aggregates duplicate product rows before updating sto
     { productId: 2, quantity: 2 }
   ]);
 
-  assert.match(calls[0].sql, /FOR UPDATE/);
-  assert.deepEqual(calls[1].params, [3, 1]);
-  assert.deepEqual(calls[2].params, [2, 2]);
+  assert.deepEqual(calls, []);
 });
 
-test('reserveStockForItems rejects when available stock is too low', async () => {
+test('reserveStockForItems succeeds even when stored stock would be empty', async () => {
+  let queried = false;
   const conn = {
-    async query(sql) {
-      if (sql.includes('SELECT id, name, stock FROM products')) {
-        return [[{ id: 9, name: 'Mixer', stock: 1 }]];
-      }
-      throw new Error('Unexpected update after stock failure');
+    async query() {
+      queried = true;
+      throw new Error('Stock should not be checked');
     }
   };
 
-  await assert.rejects(
-    () => reserveStockForItems(conn, [{ productId: 9, quantity: 2 }]),
-    /Insufficient stock for Mixer/
-  );
+  await reserveStockForItems(conn, [
+    { productId: 9, quantity: 2 },
+    { productId: 10, quantity: 3 },
+    { productId: 11, quantity: 4 }
+  ]);
+
+  assert.equal(queried, false);
 });

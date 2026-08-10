@@ -1,10 +1,5 @@
 import personPhoto from "@/assets/images/person1.jpg";
-import sharaImage from "@/assets/images/shara-removebg-preview.png";
-import sharaVideo from "@/assets/images/shara.mp4";
-import storeImage from "@/assets/images/store-removebg-preview.png";
-import consultingImage from "@/assets/images/consulting-removebg-preview.png";
-import StorefrontIcon from "@mui/icons-material/Storefront";
-import EngineeringIcon from "@mui/icons-material/Engineering";
+import sharaDialogLogo from "@/assets/images/shara-dialog-logo.png";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/NavbarV2";
 import routeHOC from "@/routes/HOCs/routeHOC";
@@ -21,7 +16,7 @@ import {
 } from "@mui/material";
 import { FC } from "react";
 import { Trans } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import AboutFounder from "./components/AboutFounder";
 import AboutUs from "./components/AboutUs";
 import ContactUsLink from "./components/ContactUsLink";
@@ -30,30 +25,42 @@ import ContactUsLink from "./components/ContactUsLink";
 import OurServices from "./components/OurServices";
 // import VisionAndMission from "./components/VisionAndMission";
 import SectionContainer from "./components/UI/SectionContainer";
-import { logoColor } from "@/style/colors";
 
 const Home: FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [isSharaDialogOpen, setIsSharaDialogOpen] = useState(false);
 
+  const openSharaDialog = () => setIsSharaDialogOpen(true);
+  const closeSharaDialog = () => setIsSharaDialogOpen(false);
+
   useEffect(() => {
+    const handleOpenSharaDialog = () => openSharaDialog();
+    window.addEventListener("open-shara-dialog", handleOpenSharaDialog);
+
+    let timeout: number | undefined;
+
     const hash = location.hash.replace(/^#/, "");
-    if (!hash) return;
+    if (hash === "shara_dialog") {
+      openSharaDialog();
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    } else if (hash) {
+      timeout = window.setTimeout(() => {
+        const sectionElement = document.getElementById(hash);
+        if (!sectionElement) return;
 
-    const timeout = window.setTimeout(() => {
-      const sectionElement = document.getElementById(hash);
-      if (!sectionElement) return;
+        const offset = 140;
+        sectionElement.scrollIntoView({ behavior: "smooth" });
+        window.scrollTo({
+          top: sectionElement.offsetTop - offset,
+          behavior: "smooth",
+        });
+      }, 50);
+    }
 
-      const offset = 140;
-      sectionElement.scrollIntoView({ behavior: "smooth" });
-      window.scrollTo({
-        top: sectionElement.offsetTop - offset,
-        behavior: "smooth",
-      });
-    }, 50);
-
-    return () => window.clearTimeout(timeout);
+    return () => {
+      if (timeout) window.clearTimeout(timeout);
+      window.removeEventListener("open-shara-dialog", handleOpenSharaDialog);
+    };
   }, [location.hash]);
 
   return (
@@ -79,15 +86,15 @@ const Home: FC = () => {
         <SectionContainer
           id="home_top_section"
           py={0}
-          sx={{
-            minHeight: { xs: "100svh", md: "auto" },
-            maxHeight: "1400px",
-            pt: { xs: 10, sm: 12, md: 12, lg: 14 },
-          }}
-        >
+            sx={{
+              minHeight: { xs: "100svh", md: "auto" },
+              maxHeight: "1400px",
+              pt: { xs: 13.5, sm: 13.5, md: 12, lg: 14 },
+            }}
+          >
           <Grid2
             container
-            spacing={{ xs: 5, sm: 4, md: 5 }}
+            spacing={{ xs: 3, sm: 4, md: 5 }}
             alignItems="center"
             justifyContent="center"
             minHeight={{ xs: "calc(100svh - 80px)", md: "72vh" }}
@@ -96,146 +103,37 @@ const Home: FC = () => {
           >
             <Grid2
               size={{ xs: 12, sm: 12, md: 6 }}
-              sx={{ pt: { xs: "10px", md: 0 }, pb: { xs: "10px", md: 0 } }}
+              sx={{ pt: { xs: 0, md: 0 }, pb: { xs: "20px", md: 0 } }}
             >
               <Stack
-                spacing={2}
+                spacing={{ xs: 2.5, md: 3 }}
                 justifyContent="center"
                 height="100%"
                 alignItems="center"
               >
-                <Grid2
-                  container
-                  spacing={{ xs: 1, md: 2 }}
-                  justifyContent="center"
-                  alignItems="center"
-                  sx={{
-                    width: "100%",
-                    maxWidth: 820,
-                    mt: { xs: -1, md: -7 },
-                    mb: { xs: 0, md: 0 },
-                    pb: { xs: "40px", md: "100px" },
-                  }}
-                >
-                  <Grid2 size={{ xs: 4 }} sx={{ display: "flex", justifyContent: "center" }}>
-                    <Stack
-                      alignItems="center"
-                      spacing={0.5}
-                      onClick={() => setIsSharaDialogOpen(true)}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      <Box
-                        component="img"
-                        src={sharaImage}
-                        alt="شعرة"
-                        sx={{
-                          width: { xs: 92, md: 240 },
-                          height: "auto",
-                          objectFit: "contain",
-                        }}
-                      />
-                    </Stack>
-                  </Grid2>
-                  <Grid2
-                    size={{ xs: 4 }}
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      transform: { xs: "translateX(-10px)", md: "translateX(-24px)" },
-                    }}
-                  >
-                    <Stack
-                      alignItems="center"
-                      spacing={0.5}
-                      onClick={() => window.open("https://store.shadi.ps", "_blank", "noopener,noreferrer")}
-                      sx={{ width: { xs: 108, md: 320 }, cursor: "pointer" }}
-                    >
-                      <Box
-                        component="img"
-                        src={storeImage}
-                        alt="المتجر"
-                        sx={{
-                          display: "block",
-                          width: "100%",
-                          height: "auto",
-                          objectFit: "contain",
-                        }}
-                      />
-                      <StorefrontIcon
-                        sx={{
-                          display: "none",
-                          color: logoColor,
-                          fontSize: { xs: 34, md: 42 },
-                        }}
-                      />
-                      <Typography
-                        sx={{
-                          color: "text.primary",
-                          fontSize: { xs: "12pt", md: "17pt" },
-                          fontWeight: 700,
-                          textAlign: "center",
-                          display: "none",
-                        }}
-                      >
-                        المتجر
-                      </Typography>
-                    </Stack>
-                  </Grid2>
-                  <Grid2 size={{ xs: 4 }} sx={{ display: "flex", justifyContent: "center" }}>
-                    <Stack
-                      alignItems="center"
-                      spacing={0.5}
-                      onClick={() => navigate("/consulting")}
-                      sx={{ width: { xs: 108, md: 320 }, cursor: "pointer" }}
-                    >
-                      <Box
-                        component="img"
-                        src={consultingImage}
-                        alt="الاستشارات"
-                        sx={{
-                          display: "block",
-                          width: "100%",
-                          height: "auto",
-                          objectFit: "contain",
-                        }}
-                      />
-                      <EngineeringIcon
-                        sx={{
-                          display: "none",
-                          color: logoColor,
-                          fontSize: { xs: 34, md: 42 },
-                        }}
-                      />
-                      <Typography
-                        sx={{
-                          color: "text.primary",
-                          fontSize: { xs: "12pt", md: "17pt" },
-                          fontWeight: 700,
-                          textAlign: "center",
-                          display: "none",
-                        }}
-                      >
-                        الاستشارات
-                      </Typography>
-                    </Stack>
-                  </Grid2>
-                </Grid2>
                 <Typography
                   variant="h4"
                   textAlign="center"
                   sx={{
                     width: "100%",
-                    maxWidth: "850px",
+                    maxWidth: "900px",
+                    mt: { xs: 0, md: 0 },
+                    mb: { xs: 0, md: 0 },
                     textAlign: "center",
                     fontWeight: "bold",
-                    lineHeight: { md: 1.235 },
+                    lineHeight: { xs: 1.35, md: 1.35 },
+                    whiteSpace: "nowrap",
+                    fontSize: {
+                      xs: "clamp(16px, 5vw, 26px)",
+                      md: "clamp(28px, 2.2vw, 32px)",
+                    },
                   }}
                 >
                   <Box
                     component="span"
                     sx={{
-                      fontSize: { xs: "16pt", md: "34pt" },
-                      color: logoColor,
+                      fontSize: "inherit",
+                      color: "#f49b00",
                     }}
                   >
                     <Trans i18nKey="Content.shadi_shirri" />
@@ -243,8 +141,8 @@ const Home: FC = () => {
                   <Box
                     component="span"
                     sx={{
-                      fontSize: { xs: "13pt", md: "30pt" },
-                      color: "black",
+                      fontSize: "inherit",
+                      color: "text.secondary",
                     }}
                   >
                     <Trans i18nKey="Content.for_engineering_consulting" />
@@ -255,11 +153,13 @@ const Home: FC = () => {
                   color="text.secondary"
                   sx={{
                     width: "100%",
-                    maxWidth: "600px",
-                    textAlign: "justify",
-                    fontSize: { xs: "10pt", md: "14pt" },
+                    maxWidth: "760px",
+                    px: { xs: 2.5, md: 0 },
+                    mt: { xs: 0, md: 0 },
+                    textAlign: "center",
+                    fontSize: { xs: "10.5pt", md: "15pt" },
                     fontWeight: { md: 400 },
-                    lineHeight: { md: 1.235 },
+                    lineHeight: { xs: 1.7, md: 1.7 },
                   }}
                 >
                   نساعد أصحاب المشاريع على اتخاذ قرارات هندسية واعية من خلال
@@ -332,45 +232,54 @@ const Home: FC = () => {
       </Stack>
       <Dialog
         open={isSharaDialogOpen}
-        onClose={() => setIsSharaDialogOpen(false)}
+        onClose={closeSharaDialog}
         fullWidth
         maxWidth="xs"
       >
         <DialogContent>
-          <Stack spacing={2} alignItems="center" pb={1}>
-            <Box
-              component="video"
-              src={sharaVideo}
-              autoPlay
-              loop
-              playsInline
-              controls={false}
-              sx={{
-                width: "100%",
-                maxWidth: { xs: 260, md: 360 },
-                height: "auto",
-                borderRadius: 2,
-              }}
-            />
+          <Stack spacing={1.5} alignItems="center">
             <Box
               component="img"
-              src={sharaImage}
+              src={sharaDialogLogo}
               alt="شعرة"
               sx={{
-                display: "block",
-                width: { xs: 140, md: 180 },
+                width: { xs: 130, md: 170 },
                 height: "auto",
                 objectFit: "contain",
               }}
             />
-            <Typography sx={{ textAlign: "center", fontSize: { xs: "13pt", md: "15pt" } }}>
-            Coming soon...
+            <Box
+              component="iframe"
+              src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1594743821586584%2F&show_text=false&width=560"
+              title="Shara Reel"
+              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+              allowFullScreen
+              sx={{
+                width: "100%",
+                maxWidth: { xs: 280, md: 360 },
+                aspectRatio: "9 / 16",
+                mx: "auto",
+                borderRadius: 2,
+                display: "block",
+                border: 0,
+              }}
+            />
+            <Typography
+              sx={{
+                fontSize: { xs: "0.95rem", md: "1.1rem" },
+                fontWeight: 700,
+                color: "#f49b00",
+                letterSpacing: "0.02em",
+                textTransform: "uppercase",
+              }}
+            >
+              Coming soon
             </Typography>
           </Stack>
         </DialogContent>
       </Dialog>
-      <Footer />
-    </Box>
+       <Footer />
+     </Box>
   );
 };
 

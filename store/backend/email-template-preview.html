@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شادي ستور - معاينة البريد</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #364049;
+        background: linear-gradient(135deg, #f6f6f8 0%, #e4e4e9 100%);
+        padding: 12px;
+      }
+      .container {
+        max-width: 700px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 6px 24px rgba(58, 55, 65, 0.12);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #3a3741 0%, #2d2a34 100%);
+        color: white;
+        text-align: center;
+        padding: 24px 16px;
+        border-bottom: 3px solid #f99d1c;
+      }
+      .content { padding: 20px; text-align: right; }
+      .section { margin-bottom: 16px; }
+      .section-title {
+        color: #3A3741;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f99d1c;
+        display: block;
+        text-align: right;
+      }
+      .payment-section {
+        background: linear-gradient(135deg, #F6F6F8 0%, #E4E4E9 100%);
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #f99d1c;
+        text-align: right;
+      }
+      .payment-label {
+        color: #5B6B7C;
+        font-weight: 600;
+        font-size: 13px;
+        text-align: right;
+        width: 150px;
+        white-space: nowrap;
+      }
+      .payment-value {
+        color: #1a1a1a;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: right;
+        word-break: break-word;
+      }
+      .summary {
+        background: linear-gradient(135deg, #3A3741 0%, #2D2A34 100%);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 4px 12px rgba(58, 55, 65, 0.25);
+      }
+      .cost-label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; font-weight: 500; }
+      .cost-amount { font-size: 32px; font-weight: 700; margin: 8px 0; color: #f99d1c; }
+      .footer {
+        background: #F6F6F8;
+        padding: 25px;
+        text-align: center;
+        color: #5B6B7C;
+        font-size: 12px;
+        border-top: 1px solid #e0e0e0;
+      }
+      .footer p { margin-bottom: 8px; }
+      .footer-link { color: #3A3741; text-decoration: none; font-weight: 600; }
+      .footer-link:hover { text-decoration: underline; color: #f99d1c; }
+      @media (max-width: 600px) {
+        .header h1 { font-size: 24px; }
+        .cost-amount { font-size: 36px; }
+        .content { padding: 20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 style="font-size:26px;font-weight:600;margin-bottom:6px;color:#f99d1c;">شادي شري للهندسة والاستشارات</h1>
+        <div style="font-size:18px;margin:8px 0;color:#ffffff;">اشعار طلب</div>
+        <div style="font-size:14px;opacity:0.9;margin-bottom:8px;">رقم الطلب: 12345</div>
+      </div>
+
+      <div class="content">
+        <div class="section">
+          <div class="section-title">معلومات الزبون 👤</div>
+          <div class="payment-section">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">الاسم:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">محمد أحمد</span>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">رقم الهاتف:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">+970597261889</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">تفاصيل الطلب 📋</div>
+          <div class="payment-section">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">العنوان:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">شارع القدس، رام الله، فلسطين</span>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">تاريخ الطلب:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">13/05/2026</span>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">الحالة:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">بانتظار الدفع</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">تفاصيل العناصر 📦</div>
+          <div class="payment-section">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span style="margin-inline-end:8px; direction:ltr; unicode-bidi:plaintext;">1 × ₪ 850</span>
+                  <span class="payment-label" style="width:auto; display:inline;">فستان سهرة - أحمر</span>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span style="margin-inline-end:8px; direction:ltr; unicode-bidi:plaintext;">1 × ₪ 400</span>
+                  <span class="payment-label" style="width:auto; display:inline;">حذاء كعب عالي - أسود</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">تفاصيل الدفع 💳</div>
+          <div class="payment-section">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">رقم الحركة:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">TXN-2026-001234</span>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">رقم البطاقة:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">**** **** **** 1234</span>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(58, 55, 65, 0.1);">
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">نوع البطاقة:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">Visa</span>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" class="payment-value" style="padding: 8px 0; text-align: right; direction: rtl;">
+                  <span class="payment-label" style="width:auto; display:inline;">تاريخ الحركة:</span>
+                  <span style="margin-inline-start:8px; direction:ltr; unicode-bidi:plaintext;">13/05/2026 10:30</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="summary">
+          <div class="cost-label">المبلغ الإجمالي للطلب</div>
+          <div class="cost-amount">₪ 1,250</div>
+        </div>
+
+        <div class="footer">
+          <p style="font-weight: 600; color: #1a1a1a; margin-bottom: 15px;">شكراً لك على اختيارك خدماتنا 🙏</p>
+          <p>إذا كان لديك أي استفسارات أو تحتاج إلى المساعدة، يرجى عدم التردد في <a href="https://store.shadi.ps" target="_blank" class="footer-link">التواصل معنا</a></p>
+          <p style="margin-top: 15px; opacity: 0.8;">&copy; 2026 شادي ستور. جميع الحقوق محفوظة.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

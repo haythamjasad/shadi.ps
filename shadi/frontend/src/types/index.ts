@@ -26,6 +26,7 @@ export type StatusFilter = "open" | "new" | "init" | "closed" | "charge";
 export interface Transaction {
   id: number;
   name: string;
+  email?: string;
   phone: string;
   serviceType: Array<ServiceType>;
   location: Location;

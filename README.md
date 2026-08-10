@@ -1,6 +1,6 @@
 # shadi.ps Workspace
 
-This repository now contains the full Shadi workspace grouped by project.
+This repository contains the full Shadi workspace grouped by project.
 
 ## Structure
 

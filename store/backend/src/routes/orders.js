@@ -1,7 +1,5 @@
 import { Router } from 'express';
 import pool from '../db.js';
-import { sendOrderEmail, sendInternalOrderEmail, getSmtpSettings } from '../utils/mailer.js';
-import { config } from '../config/env.js';
 import { getAdminFromRequest } from '../middleware/auth.js';
 import { buildOrderSummary, reserveStockForItems, validateCustomerAddress } from '../utils/order.js';
 import { verifyRecaptchaToken } from '../utils/recaptcha.js';
@@ -10,10 +8,10 @@ import {
   canAccessOrder,
   verifyCheckoutAccessToken
 } from '../utils/checkout-access.js';
-import { getOrderSelectFields } from '../utils/order-select-fields.js';
+import { getOrderSelectFields, hasOrderColumn } from '../utils/order-select-fields.js';
 
 const router = Router();
-const ORDER_ITEM_SELECT_FIELDS = 'id, order_id, product_id, product_name, color_name, color_hex, quantity, unit_price, line_total';
+const ORDER_ITEM_SELECT_FIELDS = 'id, order_id, product_id, supplier_id, product_name, color_name, color_hex, variant_id, size_name, quantity, unit_price, purchase_price, line_total';
 
 function parsePositiveInteger(value) {
   const parsed = Number(value);
@@ -67,35 +65,41 @@ router.post('/', async (req, res) => {
   try {
     await conn.beginTransaction();
 
+    const orderColumns = ['customer_name', 'customer_phone', 'customer_email', 'address_line1', 'address_line2', 'city', 'state', 'country', 'postal_code', 'notes', 'subtotal', 'tax', 'shipping', 'total', 'status'];
+    const orderValues = [
+      customer.name,
+      customer.phone,
+      customer.email || null,
+      validatedAddress.line1,
+      validatedAddress.line2 || null,
+      validatedAddress.city,
+      validatedAddress.state,
+      validatedAddress.country,
+      validatedAddress.postalCode || null,
+      notes || null,
+      subtotal,
+      tax,
+      shipping,
+      total,
+      'pending_payment'
+    ];
+    if (await hasOrderColumn('source')) {
+      orderColumns.unshift('source');
+      orderValues.unshift('store');
+    }
+
     const [orderResult] = await conn.query(
-      `INSERT INTO orders (customer_name, customer_phone, customer_email, address_line1, address_line2, city, state, country, postal_code, notes, subtotal, tax, shipping, total, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      , [
-        customer.name,
-        customer.phone,
-        customer.email || null,
-        validatedAddress.line1,
-        validatedAddress.line2 || null,
-        validatedAddress.city,
-        validatedAddress.state,
-        validatedAddress.country,
-        validatedAddress.postalCode || null,
-        notes || null,
-        subtotal,
-        tax,
-        shipping,
-        total,
-        'pending_payment'
-      ]
+      `INSERT INTO orders (${orderColumns.join(', ')}) VALUES (${orderColumns.map(() => '?').join(', ')})`,
+      orderValues
     );
 
     const orderId = orderResult.insertId;
 
     for (const item of orderItems) {
       await conn.query(
-        `INSERT INTO order_items (order_id, product_id, product_name, color_name, color_hex, quantity, unit_price, line_total)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-        , [orderId, item.productId, item.name, item.colorName, item.colorHex, item.quantity, item.unitPrice, item.lineTotal]
+        `INSERT INTO order_items (order_id, product_id, supplier_id, product_name, color_name, color_hex, variant_id, size_name, quantity, unit_price, purchase_price, line_total)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        , [orderId, item.productId, item.supplierId, item.name, item.colorName, item.colorHex, item.variantId, item.sizeName, item.quantity, item.unitPrice, item.purchasePrice, item.lineTotal]
       );
     }
 
@@ -108,32 +112,6 @@ router.post('/', async (req, res) => {
     const [itemRows] = await pool.query(`SELECT ${ORDER_ITEM_SELECT_FIELDS} FROM order_items WHERE order_id = ?`, [orderId]);
 
     const createdOrder = orderRows[0];
-    if (createdOrder?.customer_email) {
-      try {
-        await sendOrderEmail({ to: createdOrder.customer_email, order: createdOrder, items: itemRows });
-      } catch {
-        // ignore email failures
-      }
-    }
-    let notifyTo = config.orderNotifyEmail;
-    if (!notifyTo) {
-      try {
-        const smtp = await getSmtpSettings();
-        notifyTo = smtp?.notify_email || smtp?.from_email || smtp?.username;
-      } catch {
-        notifyTo = null;
-      }
-    }
-    if (!notifyTo) {
-      notifyTo = createdOrder?.customer_email;
-    }
-    if (notifyTo) {
-      try {
-        await sendInternalOrderEmail({ to: notifyTo, order: createdOrder, items: itemRows });
-      } catch {
-        // ignore email failures
-      }
-    }
     return res.status(201).json({ order: createdOrder, items: itemRows });
   } catch (err) {
     await conn.rollback();

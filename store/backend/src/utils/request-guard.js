@@ -7,12 +7,12 @@ function pruneBucket(bucket, now, windowMs) {
 }
 
 export function getClientIp(req) {
-  const forwarded = String(req.headers['x-forwarded-for'] || '').trim();
-  if (forwarded) {
-    const [first] = forwarded.split(',');
-    if (first) return first.trim();
-  }
-  return String(req.ip || req.socket?.remoteAddress || 'unknown').trim() || 'unknown';
+  const trustProxy = req.app?.get?.('trust proxy');
+  const candidate = trustProxy
+    ? req.ip
+    : req.socket?.remoteAddress;
+  const normalized = String(candidate || 'unknown').trim();
+  return normalized.replace(/^::ffff:/, '') || 'unknown';
 }
 
 export function takeRateLimit(key, { limit, windowMs }) {

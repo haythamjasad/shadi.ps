@@ -8,6 +8,10 @@ interface PaymentPayload {
     reference: string;
     callback_url: string;
     metadata?: {
+        name?: string;
+        phone?: string;
+        email?: string;
+        note?: string;
         customer_name?: string;
         customer_email?: string;
         customer_phone?: string;
@@ -23,6 +27,8 @@ interface PaymentResponse {
     status: boolean;
     data?: PaymentData;
     message?: string;
+    statusCode?: number;
+    providerError?: unknown;
 }
 
 interface PaymentData {
@@ -41,6 +47,23 @@ interface PaymentData {
 }
 
 export class PaymentService {
+    private static toMinorUnits(amount: string | number): string {
+        const numeric = Number(amount);
+        if (!Number.isFinite(numeric) || numeric <= 0) {
+            return '0';
+        }
+        return String(Math.round(numeric * 100));
+    }
+
+    private static buildSafePaymentLog(reference: string, data?: PaymentResponse) {
+        return {
+            provider: 'Lahza',
+            reference,
+            status: data?.status,
+            providerStatus: data?.data?.status,
+            providerTransactionId: data?.data?.id,
+        };
+    }
 
     static async createPaymentTransaction(amount: string, email: string, currency: string, reference: string,
         callback_url: string, metadata?: PaymentPayload['metadata']): Promise<PaymentResponse> {
@@ -54,8 +77,9 @@ export class PaymentService {
         }
 
         try {
+            const amountMinor = PaymentService.toMinorUnits(amount);
             const payload: PaymentPayload = {
-                amount,
+                amount: amountMinor,
                 email,
                 currency,
                 reference,
@@ -70,16 +94,31 @@ export class PaymentService {
                 },
             });
 
-            console.info('Lahza initialize payload:', payload);
-            console.info('Lahza initialize response:', response.data);
+            console.info('Lahza initialize amount:', {
+                provider: 'Lahza',
+                reference,
+                amountMajor: Number(amount),
+                amountMinor,
+                currency,
+            });
 
             const data: PaymentResponse = response.data;
+            console.info('Lahza initialize result:', PaymentService.buildSafePaymentLog(reference, data));
             return data;
         } catch (error: any) {
-            console.error('Lahza initialize error:', error.response?.data || error.message);
+            const providerError = error.response?.data;
+            console.error('Lahza initialize error:', {
+                provider: 'Lahza',
+                reference,
+                statusCode: error.response?.status,
+                providerStatus: providerError?.status,
+                message: providerError?.message || error.message || 'Payment processing failed',
+            });
             return {
                 status: false,
-                message: error.message || 'Payment processing failed',
+                message: providerError?.message || error.message || 'Payment processing failed',
+                statusCode: error.response?.status,
+                providerError,
             };
         }
     }

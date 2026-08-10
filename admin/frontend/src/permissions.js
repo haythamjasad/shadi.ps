@@ -1,9 +1,10 @@
 export const ADMIN_PERMISSION_DEFINITIONS = {
-  products: ['read', 'create', 'update', 'delete', 'hide', 'home', 'sort', 'import'],
-  categories: ['read', 'create', 'delete', 'sort'],
+  products: ['read', 'create', 'update', 'delete', 'hide', 'sort', 'import'],
+  categories: ['read', 'create', 'delete', 'sort', 'hide'],
   cities: ['read', 'create', 'delete'],
-  orders: ['read_list', 'read_details', 'change_status', 'preview_customer_email', 'preview_internal_email', 'send_customer_email', 'send_internal_email'],
-  shadi_transactions: ['read_list', 'update', 'delete'],
+  orders: ['read_list', 'read_unpaid', 'read_details', 'create', 'change_status', 'preview_customer_email', 'preview_internal_email', 'send_customer_email', 'send_internal_email'],
+  purchasing: ['read', 'create', 'update', 'delete'],
+  shadi_transactions: ['read_list', 'read_unpaid', 'update', 'delete'],
   shadi_join_requests: ['read_list', 'update', 'delete'],
   smtp: ['read', 'create', 'update', 'delete', 'activate', 'test'],
   lahza: ['read', 'update', 'check'],
@@ -11,7 +12,9 @@ export const ADMIN_PERMISSION_DEFINITIONS = {
   whatsapp: ['read', 'update'],
   banner: ['read', 'update', 'delete'],
   recaptcha: ['read', 'update', 'check'],
-  users: ['read', 'create', 'update_password', 'delete', 'manage_permissions']
+  users: ['read', 'create', 'update_password', 'delete', 'manage_permissions'],
+  project_x: ['read', 'manage'],
+  sharah: ['read', 'manage']
 };
 
 export function buildEmptyPermissions() {

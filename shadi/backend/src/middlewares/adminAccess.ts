@@ -37,6 +37,14 @@ function isTrustedLocalDevOrigin(origin: string | undefined): boolean {
   }
 }
 
+function canBypassAdminAuthForLocalDev(): boolean {
+  const nodeEnv = String(process.env.NODE_ENV || '').trim().toLowerCase();
+  if (nodeEnv !== 'development') return false;
+
+  const rawFlag = String(process.env.AUTH_BYPASS_LOCAL_ORIGIN || '').trim().toLowerCase();
+  return ['1', 'true', 'yes', 'on'].includes(rawFlag);
+}
+
 function getBearerToken(req: Request): string {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -47,7 +55,7 @@ function getBearerToken(req: Request): string {
 
 function verifyToken<T>(token: string, secret: string): T | null {
   try {
-    return jwt.verify(token, secret) as T;
+    return jwt.verify(token, secret, { algorithms: ['HS256'] }) as T;
   } catch {
     return null;
   }
@@ -134,7 +142,7 @@ export const authenticateAdminAccess = (
   next: NextFunction
 ) => {
   try {
-    if (isTrustedLocalDevOrigin(String(req.headers.origin || ''))) {
+    if (canBypassAdminAuthForLocalDev() && isTrustedLocalDevOrigin(String(req.headers.origin || ''))) {
       req.user = {
         id: 'local-dev-admin',
         email: 'local-dev-admin@shadi.ps',

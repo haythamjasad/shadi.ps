@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { ToastContainer } from "react-toastify";
 import Footer from "./components/Footer";
@@ -22,7 +22,6 @@ const ReturnPolicy = lazy(() => import('./pages/ReturnPolicy'));
 const ProductView = lazy(() => import('./pages/ProductView'));
 const Cart = lazy(() => import('./pages/Cart'));
 const UnifiedCheckout = lazy(() => import('./pages/Checkout/UnifiedCheckout'));
-const Products = lazy(() => import('./pages/Products'));
 const OrderSummary = lazy(() => import('./pages/OrderSummary'));
 
 /**
@@ -125,7 +124,7 @@ function App() {
             className="mt-16"
           />
 
-              <div className="flex flex-col min-h-screen md:pt-16">
+              <div className="flex flex-col min-h-screen pt-[88px] md:pt-24">
                 <Navbar />
                 <AnnouncementStrip />
 
@@ -133,7 +132,7 @@ function App() {
                 <Suspense fallback={<LoadingScreen fullScreen={false} />}>
                   <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/products" element={<Products />} />
+                    <Route path="/products" element={<Navigate to="/" replace />} />
                     <Route path="/product/:id" element={<ProductView />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<UnifiedCheckout />} />

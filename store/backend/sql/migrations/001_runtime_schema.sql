@@ -89,6 +89,7 @@ ALTER TABLE `products` ADD COLUMN `categories` JSON NULL AFTER `category`;
 ALTER TABLE `admin_users` ADD COLUMN `is_super_admin` TINYINT(1) NOT NULL DEFAULT 0 AFTER `password_hash`;
 ALTER TABLE `admin_users` ADD COLUMN `permissions` JSON NULL AFTER `is_super_admin`;
 ALTER TABLE `products` ADD COLUMN `color_options` JSON NULL AFTER `categories`;
+ALTER TABLE `products` ADD COLUMN `variant_options` JSON NULL AFTER `color_options`;
 ALTER TABLE `products` ADD COLUMN `image_urls` JSON NULL AFTER `image_url`;
 ALTER TABLE `products` ADD COLUMN `docs` JSON NULL AFTER `image_urls`;
 ALTER TABLE `products` ADD COLUMN `links` JSON NULL AFTER `docs`;
@@ -110,6 +111,9 @@ ALTER TABLE `orders` ADD COLUMN `status` VARCHAR(50) DEFAULT 'pending_payment' A
 
 ALTER TABLE `order_items` ADD COLUMN `color_name` VARCHAR(255) NULL AFTER `product_name`;
 ALTER TABLE `order_items` ADD COLUMN `color_hex` VARCHAR(20) NULL AFTER `color_name`;
+ALTER TABLE `order_items` ADD COLUMN `variant_id` VARCHAR(120) NULL AFTER `color_hex`;
+ALTER TABLE `order_items` ADD COLUMN `size_name` VARCHAR(255) NULL AFTER `variant_id`;
+ALTER TABLE `order_items` ADD COLUMN `purchase_price` DECIMAL(10,2) NULL AFTER `unit_price`;
 
 ALTER TABLE `payments` MODIFY COLUMN `order_id` INT NULL;
 ALTER TABLE `payments` ADD COLUMN `amount` DECIMAL(10,2) NOT NULL DEFAULT '0.00' AFTER `order_id`;

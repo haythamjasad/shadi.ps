@@ -151,6 +151,25 @@ async function savePdfDocEntry(entry, index) {
   };
 }
 
+export async function saveUploadedProductDoc(buffer, name = 'document.pdf') {
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) return null;
+
+  const safeName = String(name || 'document.pdf').trim() || 'document.pdf';
+  const fileName = `${sanitizeDocBaseName(safeName, 'document')}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.pdf`;
+  const filePath = path.join(getDocsDir(), fileName);
+
+  await fs.mkdir(getDocsDir(), { recursive: true });
+  await fs.writeFile(filePath, buffer);
+
+  return {
+    id: `doc-${Date.now()}`,
+    name: safeName.replace(/\.pdf$/i, '') ? safeName : 'document.pdf',
+    type: DEFAULT_DOC_TYPE,
+    size: buffer.length,
+    url: getPublicDocUrl(fileName)
+  };
+}
+
 export function normalizeProductDocs(value) {
   return (Array.isArray(value) ? value : [])
     .map((entry, index) => normalizeDocEntry(entry, index))
@@ -168,10 +187,15 @@ export async function persistProductDocs(nextDocs) {
     const normalizedDocs = [];
     const sourceDocs = Array.isArray(nextDocs) ? nextDocs : [];
     for (let index = 0; index < sourceDocs.length; index += 1) {
-      const saved = await savePdfDocEntry(sourceDocs[index], index);
+      const source = sourceDocs[index];
+      const rawUrl = typeof source === 'string'
+        ? source
+        : String(source?.url || source?.href || source?.path || source?.dataUrl || '').trim();
+      const createsNewFile = isPdfDataUrl(rawUrl);
+      const saved = await savePdfDocEntry(source, index);
       if (!saved) continue;
       normalizedDocs.push(saved);
-      if (isManagedDocUrl(saved.url)) {
+      if (createsNewFile && isManagedDocUrl(saved.url)) {
         createdUrls.push(saved.url);
       }
     }

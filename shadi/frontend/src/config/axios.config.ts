@@ -1,6 +1,31 @@
 import { getSession } from "@/lib/session";
 import axios, { AxiosRequestConfig } from "axios";
 
+const resolveApiUrl = () => {
+  const configuredUrl = import.meta.env.VITE_API_URL;
+
+  if (!configuredUrl) return configuredUrl;
+  if (typeof window === "undefined") return configuredUrl;
+
+  try {
+    const parsed = new URL(configuredUrl);
+    const isLocalHost =
+      parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+    const isRemoteClient =
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1";
+
+    if (isLocalHost && isRemoteClient) {
+      parsed.hostname = window.location.hostname;
+      return parsed.toString().replace(/\/$/, "");
+    }
+  } catch {
+    return configuredUrl;
+  }
+
+  return configuredUrl;
+};
+
 const getDefaultAxiosSettings = (): AxiosRequestConfig => {
   const accessToken = getSession();
   const bearerKey = import.meta.env.VITE_BEARERKEY;
@@ -18,12 +43,12 @@ const getDefaultAxiosSettings = (): AxiosRequestConfig => {
 const defaultAxiosSettings = getDefaultAxiosSettings();
 
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: resolveApiUrl(),
   ...defaultAxiosSettings,
 });
 
 export const axiosFormData = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: resolveApiUrl(),
   headers: {
     ...defaultAxiosSettings.headers,
     Accept: "*/*",
