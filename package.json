@@ -1,0 +1,20 @@
+{
+  "name": "shadi-ps-github",
+  "version": "1.0.0",
+  "description": "This repository contains the full Shadi workspace grouped by project.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haythamjasad/shadi.ps.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/haythamjasad/shadi.ps/issues"
+  },
+  "homepage": "https://github.com/haythamjasad/shadi.ps#readme"
+}
