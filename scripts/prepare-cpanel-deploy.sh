@@ -61,11 +61,14 @@ cp -a "${ROOT_DIR}/store/backend/.env.cpanel.example" "${OUT_DIR}/backend-app/.e
 cp -a "${ROOT_DIR}/store/backend/src" "${OUT_DIR}/backend-app/src"
 cp -a "${ROOT_DIR}/store/backend/scripts" "${OUT_DIR}/backend-app/scripts"
 
-for optional_dir in uploads email-assets sql pdf vendor; do
-  if [ -d "${ROOT_DIR}/store/backend/${optional_dir}" ]; then
+for optional_dir in email-assets sql pdf vendor; do
+if [ -d "${ROOT_DIR}/store/backend/${optional_dir}" ]; then
     cp -a "${ROOT_DIR}/store/backend/${optional_dir}" "${OUT_DIR}/backend-app/${optional_dir}"
   fi
 done
+
+rm -rf "${OUT_DIR}/backend-app/sql/backups"
+rm -f "${OUT_DIR}/backend-app/sql/seed_dump.sql"
 
 for optional_file in composer.json composer.lock; do
   if [ -f "${ROOT_DIR}/store/backend/${optional_file}" ]; then
@@ -76,6 +79,8 @@ done
 cp -a "${STORE_BUILD_DIR}/." "${OUT_DIR}/storefront-public/"
 cp -a "${ADMIN_BUILD_DIR}/." "${OUT_DIR}/admin-public/"
 cp -a "${ROOT_DIR}/store/cpanel-root-htaccess.example" "${OUT_DIR}/root-htaccess.example"
+
+rm -rf "${OUT_DIR}/storefront-public/uploads"
 
 cat > "${OUT_DIR}/README-cpanel.txt" <<EOF
 cPanel deploy bundle

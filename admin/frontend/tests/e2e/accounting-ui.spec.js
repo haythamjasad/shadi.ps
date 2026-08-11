@@ -245,16 +245,21 @@ test('renders compact accounting lists and opens supplier statement view', async
   const supplierRow = page.locator('tbody tr', { hasText: 'مورد بيست براس' }).first();
   await supplierRow.getByRole('button', { name: 'عرض الكشف' }).click();
   await expect(page.getByRole('heading', { name: 'كشف حساب المورد: مورد بيست براس' })).toBeVisible();
-  await expect(page.locator('.accounting-statement-view table')).toHaveCount(0);
-  await expect(page.getByText('إجمالي البيع')).toBeVisible();
-  await expect(page.locator('.accounting-statement-view').getByText('مدين').first()).toBeVisible();
-  await expect(page.locator('.accounting-statement-view').getByText('دائن').first()).toBeVisible();
+  await expect(page.locator('.accounting-statement-view table.statement-table')).toBeVisible();
+  await expect(page.locator('.accounting-statement-view').getByText('إجمالي الشراء')).toBeVisible();
+  await expect(page.locator('.accounting-statement-view').getByText('صافي الربح')).toHaveCount(0);
+  await expect(page.getByRole('columnheader', { name: 'مدين' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'دائن' })).toBeVisible();
   await expect(page.locator('.accounting-statement-view').getByText('70.00').first()).toBeVisible();
 
   await page.getByRole('button', { name: 'التفاصيل' }).first().click();
   await expect(page.getByRole('heading', { name: 'تفاصيل الحركة' })).toBeVisible();
-  await expect(page.locator('.accounting-detail-modal').getByText('Pegoland Flex').first()).toBeVisible();
-  await expect(page.locator('.accounting-detail-modal').getByText('سعر الشراء').first()).toBeVisible();
+  const supplierModal = page.locator('.accounting-detail-modal');
+  await expect(supplierModal.getByText('Pegoland Flex').first()).toBeVisible();
+  await expect(supplierModal.getByText('سعر الشراء').first()).toBeVisible();
+  await expect(supplierModal.getByText('3 × 100.00 = 300.00').first()).toBeVisible();
+  await expect(supplierModal.getByText('سعر البيع')).toHaveCount(0);
+  await expect(supplierModal.getByText('ربح')).toHaveCount(0);
 });
 
 test('opens customer statement, preserves list state, and keeps export available', async ({ page }) => {
@@ -279,6 +284,10 @@ test('opens customer statement, preserves list state, and keeps export available
   await expect(customerModal.getByText('رقم الطلب')).toBeVisible();
   await expect(customerModal.getByText('#501').first()).toBeVisible();
   await expect(customerModal.getByText('Pegoland Flex').first()).toBeVisible();
+  await expect(customerModal.getByText('سعر البيع').first()).toBeVisible();
+  await expect(customerModal.getByText('3 × 450.00 = 1,350.00').first()).toBeVisible();
+  await expect(customerModal.getByText('سعر الشراء')).toHaveCount(0);
+  await expect(customerModal.getByText('ربح')).toHaveCount(0);
   await page.getByRole('button', { name: 'إغلاق' }).click();
 
   await page.getByRole('button', { name: 'رجوع للقائمة' }).click();
@@ -297,15 +306,19 @@ test('uses a modal for voucher details instead of inline rows', async ({ page })
   const modal = page.locator('.accounting-detail-modal');
   await expect(modal.getByText('مورد بيست براس').first()).toBeVisible();
   await expect(modal.getByText('Pegoland Flex').first()).toBeVisible();
+  await expect(modal.getByText('سعر الشراء').first()).toBeVisible();
+  await expect(modal.getByText('3 × 100.00 = 300.00').first()).toBeVisible();
+  await expect(modal.getByText('سعر البيع')).toHaveCount(0);
+  await expect(modal.getByText('ربح')).toHaveCount(0);
 });
 
-test('mobile statement layout uses labelled cards without nested statement tables', async ({ page }) => {
+test('mobile statement layout keeps the statement table readable', async ({ page }) => {
   await openAccounting(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('tbody tr', { hasText: 'مورد بيست براس' }).first().getByRole('button', { name: 'عرض الكشف' }).click();
 
   await expect(page.getByRole('heading', { name: 'كشف حساب المورد: مورد بيست براس' })).toBeVisible();
-  await expect(page.locator('.accounting-statement-view table')).toHaveCount(0);
-  await expect(page.locator('.statement-ledger-entry').first()).toBeVisible();
+  await expect(page.locator('.accounting-statement-view table.statement-table')).toBeVisible();
+  await expect(page.locator('.statement-table-wrap')).toBeVisible();
   await expect(page.getByRole('button', { name: 'رجوع للقائمة' })).toBeVisible();
 });

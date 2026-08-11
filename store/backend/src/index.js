@@ -89,7 +89,7 @@ const corsOptions = {
   },
   credentials: false,
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Checkout-Token', 'X-File-Name'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Checkout-Token', 'X-File-Name', 'Idempotency-Key'],
   optionsSuccessStatus: 204
 };
 
@@ -99,7 +99,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Checkout-Token, X-File-Name');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Checkout-Token, X-File-Name, Idempotency-Key');
   }
 
   if (req.method === 'OPTIONS') {

@@ -10,7 +10,8 @@
     "test": "node --test",
     "migrate:product-docs": "node scripts/migrate-legacy-product-docs.js",
     "backfill:admin-permissions": "node scripts/backfill-admin-permissions.js",
-    "repair:order-clients": "node scripts/repair-order-client-links.js"
+    "repair:order-clients": "node scripts/repair-order-client-links.js",
+    "repair:duplicate-admin-saves": "node scripts/repair-duplicate-admin-saves.js"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",

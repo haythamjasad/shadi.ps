@@ -4401,11 +4401,8 @@ router.get('/suppliers/:id/orders/export', requirePermission('purchasing', 'read
       { key: 'status', label: 'حالة الطلب' },
       { key: 'product_name', label: 'المنتج' },
       { key: 'quantity', label: 'الكمية' },
-      { key: 'unit_price', label: 'سعر البيع' },
-      { key: 'line_total', label: 'إجمالي البيع' },
       { key: 'purchase_price', label: 'سعر الشراء' },
-      { key: 'purchase_total', label: 'إجمالي الشراء' },
-      { key: 'profit_total', label: 'إجمالي الربح' }
+      { key: 'purchase_total', label: 'إجمالي الشراء' }
     ],
     rows
   });
@@ -4759,11 +4756,9 @@ router.get('/purchasing/reports/suppliers/export', requirePermission('purchasing
       { key: 'total_purchases', label: 'إجمالي المشتريات' },
       { key: 'total_sales', label: 'إجمالي البيع' },
       { key: 'purchase_total', label: 'إجمالي الشراء' },
-      { key: 'net_profit', label: 'صافي الربح' },
       { key: 'total_payments', label: 'إجمالي الدفعات' },
       { key: 'net_movement', label: 'صافي الحركة' },
       { key: 'current_outstanding_balance', label: 'الرصيد الحالي' },
-      { key: 'product_names', label: 'الأصناف' },
       { key: 'entries_count', label: 'عدد القيود' }
     ],
     rows: reportData.rows
@@ -4792,12 +4787,9 @@ router.get('/purchasing/reports/suppliers/:id/statement/export', requirePermissi
       { key: 'date', label: 'التاريخ', value: (row) => formatExportDate(row.date) },
       { key: 'transaction_type', label: 'النوع', value: getSupplierVoucherLabel },
       { key: 'amount', label: 'المبلغ' },
-      { key: 'total_sales', label: 'إجمالي البيع' },
       { key: 'purchase_total', label: 'إجمالي الشراء' },
-      { key: 'net_profit', label: 'صافي الربح' },
       { key: 'running_balance', label: 'الرصيد التراكمي' },
       { key: 'reference_doc', label: 'المرجع' },
-      { key: 'product_names', label: 'الأصناف' },
       { key: 'note', label: 'ملاحظة' }
     ],
     rows: result.rows
@@ -4823,10 +4815,8 @@ router.get('/purchasing/reports/clients/export', requirePermission('purchasing',
       { key: 'purchase_total', label: 'إجمالي الشراء' },
       { key: 'total_receipts', label: 'إجمالي المقبوضات' },
       { key: 'net_movement', label: 'صافي الحركة' },
-      { key: 'net_profit', label: 'صافي الربح' },
       { key: 'current_outstanding_balance', label: 'الرصيد الحالي' },
       { key: 'orders_count', label: 'عدد الطلبات' },
-      { key: 'product_names', label: 'الأصناف' },
       { key: 'entries_count', label: 'عدد القيود' }
     ],
     rows: reportData.rows
@@ -4856,12 +4846,9 @@ router.get('/purchasing/reports/clients/:id/statement/export', requirePermission
       { key: 'transaction_type', label: 'النوع', value: getClientVoucherLabel },
       { key: 'amount', label: 'المبلغ' },
       { key: 'total_sales', label: 'إجمالي البيع' },
-      { key: 'purchase_total', label: 'إجمالي الشراء' },
-      { key: 'net_profit', label: 'صافي الربح' },
       { key: 'running_balance', label: 'الرصيد التراكمي' },
       { key: 'reference_doc', label: 'المرجع' },
       { key: 'order_id', label: 'رقم الطلب' },
-      { key: 'product_names', label: 'الأصناف' },
       { key: 'note', label: 'ملاحظة' }
     ],
     rows: result.rows
@@ -4888,9 +4875,6 @@ router.get('/purchasing/reports/customers/export', requirePermission('purchasing
       { key: 'gross_sales', label: 'إجمالي قبل الخصم' },
       { key: 'discounts_total', label: 'الخصومات' },
       { key: 'net_sales', label: 'الصافي' },
-      { key: 'purchase_total', label: 'إجمالي الشراء' },
-      { key: 'net_profit', label: 'صافي الربح' },
-      { key: 'product_names', label: 'الأصناف' },
       { key: 'first_order_at', label: 'أول طلب', value: (row) => formatExportDate(row.first_order_at) },
       { key: 'last_order_at', label: 'آخر طلب', value: (row) => formatExportDate(row.last_order_at) }
     ],
@@ -4956,12 +4940,9 @@ router.get('/purchasing/reports/customers/:customerKey/orders/export', requirePe
       { key: 'product_name', label: 'المنتج' },
       { key: 'quantity', label: 'الكمية' },
       { key: 'unit_price', label: 'سعر القطعة' },
-      { key: 'purchase_price', label: 'سعر الشراء' },
       { key: 'line_total', label: 'إجمالي المنتج' },
-      { key: 'purchase_total', label: 'إجمالي الشراء' },
       { key: 'subtotal', label: 'قبل الخصم' },
-      { key: 'discount_amount', label: 'الخصم' },
-      { key: 'profit_total', label: 'صافي الربح' }
+      { key: 'discount_amount', label: 'الخصم' }
     ],
     rows
   });
